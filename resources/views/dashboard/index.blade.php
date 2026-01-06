@@ -1,0 +1,352 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="min-h-[calc(100vh-64px)] bg-gradient-to-br from-slate-50 via-white to-slate-100
+            dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+  <div class="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
+
+    {{-- Header --}}
+    <div class="rounded-2xl border border-slate-200/70 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-sm
+                dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
+      <div class="p-5 md:p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div class="flex items-start gap-3">
+          <div class="h-11 w-11 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 text-white grid place-items-center shadow
+                      dark:from-slate-200 dark:to-slate-100 dark:text-slate-900">
+            {{-- simple icon --}}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.4 20a7.4 7.4 0 10-14.8 0" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">Dashboard Scan Gate</h1>
+            <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">Monitoring validasi tiket secara real-time per event & gate.</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <a href="{{ route('events.index') }}"
+             class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-semibold shadow-sm transition
+                    focus:outline-none focus:ring-4 focus:ring-slate-200/70
+                    dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:shadow-none dark:focus:ring-slate-700/50">
+            Manage Events
+          </a>
+          <a href="{{ route('scan.index', ['event_id'=>$eventId]) }}"
+             class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold shadow-sm transition
+                    focus:outline-none focus:ring-4 focus:ring-slate-200/70
+                    dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 dark:shadow-none dark:focus:ring-slate-700/50">
+            Open Scan Gate
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      {{-- Filter bar --}}
+      <div class="px-5 md:px-6 pb-5 md:pb-6">
+        <div class="flex flex-col lg:flex-row lg:items-end gap-3 lg:gap-4">
+          <div class="flex-1">
+            <label class="text-xs font-bold text-slate-600 uppercase tracking-wider dark:text-slate-300">Event</label>
+            <div class="mt-2 relative">
+              <select id="eventSelect"
+                      class="w-full appearance-none px-4 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50
+                             focus:outline-none focus:ring-4 focus:ring-slate-200/70 font-semibold text-slate-900 transition
+                             dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:focus:ring-slate-700/50">
+                @foreach($events as $e)
+                  <option value="{{ $e->id }}" @selected($e->id == $eventId)>{{ $e->id }} - {{ $e->name }}</option>
+                @endforeach
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500 dark:text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="btnRefresh"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50
+                           font-semibold text-slate-900 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-slate-200/70
+                           dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:shadow-none dark:focus:ring-slate-700/50">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5 19a9 9 0 0114-7M19 5a9 9 0 00-14 7" />
+              </svg>
+              Refresh
+            </button>
+
+            <div class="px-4 py-3 rounded-xl bg-slate-900 text-white shadow-sm
+                        dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none dark:border dark:border-slate-800">
+              <div class="text-[11px] uppercase tracking-wider opacity-80">Last update</div>
+              <div id="last" class="text-sm font-semibold">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- KPI Cards --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
+                  dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider dark:text-slate-400">Total Tickets</div>
+            <div id="k_totalTickets" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
+          </div>
+          <div class="h-11 w-11 rounded-2xl bg-slate-100 text-slate-900 grid place-items-center
+                      dark:bg-slate-950/40 dark:text-slate-100 dark:border dark:border-slate-800">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m6 10V7M5 12h14" />
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4 h-2 rounded-full bg-slate-100 overflow-hidden dark:bg-slate-950/40">
+          <div id="bar_total" class="h-2 rounded-full bg-slate-900 w-0 transition-all dark:bg-slate-100"></div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
+                  dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-emerald-600 uppercase tracking-wider dark:text-emerald-300">Valid Today</div>
+            <div id="k_validToday" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
+          </div>
+          <div class="h-11 w-11 rounded-2xl bg-emerald-50 text-emerald-700 grid place-items-center
+                      dark:bg-emerald-950/30 dark:text-emerald-200 dark:border dark:border-emerald-900/60">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        </div>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Jumlah scan valid hari ini.</p>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
+                  dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-indigo-600 uppercase tracking-wider dark:text-indigo-300">Valid Month</div>
+            <div id="k_validMonth" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
+          </div>
+          <div class="h-11 w-11 rounded-2xl bg-indigo-50 text-indigo-700 grid place-items-center
+                      dark:bg-indigo-950/30 dark:text-indigo-200 dark:border dark:border-indigo-900/60">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M4 11h16M6 21h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        </div>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Akumulasi valid bulan berjalan.</p>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
+                  dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider dark:text-slate-400">Valid All</div>
+            <div id="k_validAll" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
+          </div>
+          <div class="h-11 w-11 rounded-2xl bg-slate-100 text-slate-700 grid place-items-center
+                      dark:bg-slate-950/40 dark:text-slate-100 dark:border dark:border-slate-800">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
+            </svg>
+          </div>
+        </div>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Total scan valid sepanjang event.</p>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
+                  dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-amber-600 uppercase tracking-wider dark:text-amber-300">Duplicate</div>
+            <div id="k_dupAll" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
+          </div>
+          <div class="h-11 w-11 rounded-2xl bg-amber-50 text-amber-700 grid place-items-center
+                      dark:bg-amber-950/30 dark:text-amber-200 dark:border dark:border-amber-900/60">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8M8 8h8M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        </div>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Scan ulang yang sudah pernah valid.</p>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
+                  dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-rose-600 uppercase tracking-wider dark:text-rose-300">Invalid</div>
+            <div id="k_invalidAll" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
+          </div>
+          <div class="h-11 w-11 rounded-2xl bg-rose-50 text-rose-700 grid place-items-center
+                      dark:bg-rose-950/30 dark:text-rose-200 dark:border dark:border-rose-900/60">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+        </div>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">QR/tiket tidak terdaftar atau gagal validasi.</p>
+      </div>
+    </div>
+
+    {{-- Panels --}}
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm
+                  dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
+        <div class="p-5 border-b border-slate-200/70 flex items-center justify-between dark:border-slate-800/70">
+          <div>
+            <div class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Top Gate</div>
+            <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">Gate dengan scan terbanyak (event terpilih).</div>
+          </div>
+          <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-slate-900 text-white
+                       dark:bg-slate-100 dark:text-slate-900">Live</span>
+        </div>
+        <div class="p-5">
+          <div id="byGate" class="text-sm text-slate-700 leading-relaxed dark:text-slate-200">-</div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm
+                  dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
+        <div class="p-5 border-b border-slate-200/70 flex items-center justify-between dark:border-slate-800/70">
+          <div>
+            <div class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Recent Scans</div>
+            <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">Aktivitas terbaru (auto refresh tiap 5 detik).</div>
+          </div>
+          <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-slate-100 text-slate-700
+                       dark:bg-slate-950/40 dark:text-slate-200 dark:border dark:border-slate-800">Latest</span>
+        </div>
+        <div class="p-5">
+          <div id="recent" class="text-sm text-slate-700 leading-relaxed dark:text-slate-200">-</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-xs text-slate-500 flex items-center justify-between dark:text-slate-400">
+      <div>Tip: gunakan tombol <span class="font-semibold text-slate-700 dark:text-slate-200">Refresh</span> jika ingin update manual.</div>
+      <div class="hidden md:block">UI: Tailwind • Layout modern • Soft shadows</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const el = (id) => document.getElementById(id);
+
+  const fmt = (n) => {
+    try { return new Intl.NumberFormat('id-ID').format(Number(n ?? 0)); }
+    catch { return String(n ?? 0); }
+  };
+
+  async function loadData() {
+    const btn = el('btnRefresh');
+    try {
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('opacity-70','cursor-not-allowed');
+      }
+
+      const eventSelect = el('eventSelect');
+      const eventId = eventSelect ? eventSelect.value : null;
+
+      const url = new URL("{{ route('dashboard.index') }}");
+      if (eventId) url.searchParams.set('event_id', eventId);
+
+      const res = await fetch(url, { headers: {'Accept':'application/json'} });
+
+      if (!res.ok) {
+        console.error('HTTP Error', res.status, await res.text());
+        return;
+      }
+
+      const data = await res.json();
+      if (!data || data.ok !== true) {
+        console.error('Bad JSON payload:', data);
+        return;
+      }
+
+      const kpi = data.kpi || {};
+      const totalTickets = kpi.totalTickets ?? 0;
+      const validToday   = kpi.validToday ?? 0;
+      const validMonth   = kpi.validMonth ?? 0;
+      const validAll     = kpi.validAll ?? 0;
+      const dupAll       = kpi.dupAll ?? 0;
+      const invalidAll   = kpi.invalidAll ?? 0;
+
+      if (el('k_totalTickets')) el('k_totalTickets').textContent = fmt(totalTickets);
+      if (el('k_validToday'))   el('k_validToday').textContent   = fmt(validToday);
+      if (el('k_validMonth'))   el('k_validMonth').textContent   = fmt(validMonth);
+      if (el('k_validAll'))     el('k_validAll').textContent     = fmt(validAll);
+      if (el('k_dupAll'))       el('k_dupAll').textContent       = fmt(dupAll);
+      if (el('k_invalidAll'))   el('k_invalidAll').textContent   = fmt(invalidAll);
+
+      const pct = totalTickets > 0 ? Math.min(100, Math.round((validAll / totalTickets) * 100)) : 0;
+      const bar = el('bar_total');
+      if (bar) bar.style.width = pct + '%';
+
+      const gateHtml = (data.byGate || []).map(g => {
+        const name = g.gate_name ?? '-';
+        const total = fmt(g.total ?? 0);
+        return `
+          <div class="flex items-center justify-between py-2 border-b border-slate-200/60 last:border-b-0 dark:border-slate-800/70">
+            <div class="font-semibold text-slate-800 dark:text-slate-100">${name}</div>
+            <div class="text-sm font-extrabold text-slate-900 dark:text-slate-100">${total}</div>
+          </div>
+        `;
+      }).join('');
+      if (el('byGate')) el('byGate').innerHTML = gateHtml || '<span class="text-slate-500 dark:text-slate-400">-</span>';
+
+      const recHtml = (data.recent || []).map(r => {
+        const t = (r.scanned_at ?? '').replace('T',' ').substring(0,19);
+        const gate = r.gate_name ? `• ${r.gate_name}` : '';
+        const result = String(r.scan_result ?? '').toUpperCase();
+
+        let badgeClass = 'bg-slate-100 text-slate-700 dark:bg-slate-950/40 dark:text-slate-200 dark:border dark:border-slate-800';
+        if (result.includes('VALID')) badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 dark:border dark:border-emerald-900/60';
+        if (result.includes('DUP')) badgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200 dark:border dark:border-amber-900/60';
+        if (result.includes('INVALID') || result.includes('FAIL')) badgeClass = 'bg-rose-100 text-rose-800 dark:bg-rose-950/30 dark:text-rose-200 dark:border dark:border-rose-900/60';
+
+        return `
+          <div class="py-2 border-b border-slate-200/60 last:border-b-0 dark:border-slate-800/70">
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-extrabold px-2 py-1 rounded-lg ${badgeClass}">${result || '-'}</span>
+              <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">${t || '-'}</span>
+              <span class="text-xs text-slate-500 dark:text-slate-400">${gate}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+      if (el('recent')) el('recent').innerHTML = recHtml || '<span class="text-slate-500 dark:text-slate-400">-</span>';
+
+      if (el('last')) el('last').textContent = new Date().toLocaleString('id-ID');
+    } catch (e) {
+      console.error('JS Error:', e);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-70','cursor-not-allowed');
+      }
+    }
+  }
+
+  const btn = el('btnRefresh');
+  if (btn) btn.addEventListener('click', loadData);
+
+  const sel = el('eventSelect');
+  if (sel) {
+    sel.addEventListener('change', () => {
+      const u = new URL(window.location);
+      u.searchParams.set('event_id', sel.value);
+      history.replaceState({}, '', u);
+      loadData();
+    });
+  }
+
+  loadData();
+  setInterval(loadData, 5000);
+</script>
+@endsection
