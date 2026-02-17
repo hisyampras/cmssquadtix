@@ -266,15 +266,50 @@
 
           <!-- MIDDLE: MENU -->
           <div class="flex-1 min-h-0 overflow-y-auto pr-1 space-y-5">
+            @unless($isScanGate)
+              {{-- MAIN MENU --}}
+              <section class="rounded-xl border border-[var(--border)] overflow-hidden transition-theme" data-nav-section>
+                <button type="button"
+                  class="flex items-center justify-between px-3 h-11 bg-[var(--panel)] w-full"
+                  data-collapse-btn data-key="nav:main" aria-expanded="true">
+                  <span class="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+                    x-show="!sidebarMini" x-transition>
+                    Main
+                  </span>
+                  <span class="text-xs font-semibold text-[var(--text-muted)]" x-show="sidebarMini" x-cloak>
+                    <i class="fa-solid fa-house"></i>
+                  </span>
+                  <svg class="h-4 w-4 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
+                  </svg>
+                </button>
 
-            {{-- SCAN SYSTEM MENU --}}
+                <div class="p-2 space-y-1 bg-[var(--sidebar-bg)] border-t border-[var(--border)]"
+                  data-collapse-panel data-key="nav:main">
+
+                  <a href="{{ route('events.index') }}"
+                    data-nav-search-item
+                    data-label="events event acara master"
+                    @class([
+                      $navItemBase,
+                      'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' => request()->routeIs('events.*'),
+                    ])>
+                    <span class="w-6 flex justify-center text-[var(--text-muted)]">
+                      <i class="fa-regular fa-calendar-days text-sm"></i>
+                    </span>
+                    <span class="text-sm" x-show="!sidebarMini" x-transition>Events</span>
+                  </a>
+                </div>
+              </section>
+            @endunless
+            {{-- SCAN IN MENU --}}
             <section class="rounded-xl border border-[var(--border)] overflow-hidden transition-theme" data-nav-section>
               <button type="button"
                 class="flex items-center justify-between px-3 h-11 bg-[var(--panel)] w-full"
                 data-collapse-btn data-key="nav:scan" aria-expanded="true">
                 <span class="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]"
                   x-show="!sidebarMini" x-transition>
-                  Scan System
+                  Scan In
                 </span>
                 <span class="text-xs font-semibold text-[var(--text-muted)]" x-show="sidebarMini" x-cloak>
                   <i class="fa-solid fa-qrcode"></i>
@@ -310,19 +345,51 @@
                   </span>
                   <span class="text-sm" x-show="!sidebarMini" x-transition>Scan Mobile</span>
                 </a>
+              </div>
+            </section>
 
-                <a href="{{ route('events.index') }}"
+            {{-- SCAN OUT MENU --}}
+            <section class="rounded-xl border border-[var(--border)] overflow-hidden transition-theme" data-nav-section>
+              <button type="button"
+                class="flex items-center justify-between px-3 h-11 bg-[var(--panel)] w-full"
+                data-collapse-btn data-key="nav:scan-out" aria-expanded="true">
+                <span class="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+                  x-show="!sidebarMini" x-transition>
+                  Scan Out
+                </span>
+                <span class="text-xs font-semibold text-[var(--text-muted)]" x-show="sidebarMini" x-cloak>
+                  <i class="fa-solid fa-qrcode"></i>
+                </span>
+                <svg class="h-4 w-4 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
+                </svg>
+              </button>
+
+              <div class="p-2 space-y-1 bg-[var(--sidebar-bg)] border-t border-[var(--border)]"
+                data-collapse-panel data-key="nav:scan-out">
+
+                <a href="{{ route('scan.index') }}"
                   data-nav-search-item
-                  data-label="events event acara master"
+                  data-label="scan gate scanner checkout"
                   @class([
                     $navItemBase,
                     'hidden' => $isScanGate,
-                    'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' => request()->routeIs('events.*'),
+                    'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' => request()->routeIs('scan.index'),
                   ])>
                   <span class="w-6 flex justify-center text-[var(--text-muted)]">
-                    <i class="fa-regular fa-calendar-days text-sm"></i>
+                    <i class="fa-solid fa-qrcode text-sm"></i>
                   </span>
-                  <span class="text-sm" x-show="!sidebarMini" x-transition>Events</span>
+                  <span class="text-sm" x-show="!sidebarMini" x-transition>Scan Gate</span>
+                </a>
+
+                <a href="{{ route('scan.mobile') }}"
+                  data-nav-search-item
+                  data-label="scan mobile pdt handheld checkout"
+                  class="{{ $navItemBase }} {{ request()->routeIs('scan.mobile') ? 'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' : '' }}">
+                  <span class="w-6 flex justify-center text-[var(--text-muted)]">
+                    <i class="fa-solid fa-mobile-screen-button text-sm"></i>
+                  </span>
+                  <span class="text-sm" x-show="!sidebarMini" x-transition>Scan Mobile</span>
                 </a>
               </div>
             </section>
@@ -557,21 +624,29 @@
       const icon = btn.querySelector('svg');
       if (icon) icon.style.transform = expanded ? 'rotate(180deg)' : 'rotate(0deg)';
     }
-    document.querySelectorAll('[data-collapse-btn]').forEach(btn => {
+    function setCollapseState(btn, expanded) {
       const key = STATE_PREFIX + btn.dataset.key;
-      const stored = localStorage.getItem(key);
-      const expanded = stored === null ? true : stored === '1';
       const panel = document.querySelector(`[data-collapse-panel][data-key="${btn.dataset.key}"]`);
       btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
       setChevron(btn, expanded);
       if (panel) panel.style.display = expanded ? 'block' : 'none';
+      try { localStorage.setItem(key, expanded ? '1' : '0'); } catch (_) {}
+    }
+
+    const collapseButtons = Array.from(document.querySelectorAll('[data-collapse-btn]'));
+    collapseButtons.forEach(btn => {
+      const stored = localStorage.getItem(STATE_PREFIX + btn.dataset.key);
+      const expanded = stored === null ? true : stored === '1';
+      setCollapseState(btn, expanded);
 
       btn.addEventListener('click', () => {
-        const now = btn.getAttribute('aria-expanded') !== 'true';
-        btn.setAttribute('aria-expanded', now ? 'true' : 'false');
-        setChevron(btn, now);
-        if (panel) panel.style.display = now ? 'block' : 'none';
-        try { localStorage.setItem(key, now ? '1' : '0'); } catch (_) {}
+        const willOpen = btn.getAttribute('aria-expanded') !== 'true';
+        if (willOpen) {
+          collapseButtons.forEach(otherBtn => {
+            if (otherBtn !== btn) setCollapseState(otherBtn, false);
+          });
+        }
+        setCollapseState(btn, willOpen);
       });
     });
 
@@ -688,3 +763,5 @@
 </body>
 
 </html>
+
+
