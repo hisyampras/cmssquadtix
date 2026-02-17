@@ -20,7 +20,7 @@
           <div>
             <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">Tickets</h1>
             <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">
-              Event: <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $event->name }}</span>
+              Event: <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $event->event_code ?? '-' }} - {{ $event->name }}</span>
             </p>
           </div>
         </div>
@@ -60,6 +60,85 @@
       </div>
     @endif
 
+    @if(session('import_errors'))
+      <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900
+                  dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+        <div class="font-extrabold">Beberapa baris CSV dilewati</div>
+        <ul class="mt-2 text-sm list-disc pl-5 space-y-1">
+          @foreach(session('import_errors') as $error)
+            <li>{{ $error }}</li>
+          @endforeach
+        </ul>
+      </div>
+    @endif
+
+    {{-- Ticket Type Entry Rules --}}
+    <div class="rounded-3xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm overflow-hidden
+                dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
+      <div class="p-4 md:p-5 border-b border-slate-200/70 dark:border-slate-800/70">
+        <div class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Gate Rule per Ticket Type</div>
+        <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">
+          Atur berapa kali tiket boleh check-in. Kosongkan untuk <span class="font-bold">unlimited</span>.
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50/70 text-slate-700 dark:bg-slate-950/40 dark:text-slate-200">
+            <tr>
+              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Ticket Type</th>
+              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Total Ticket</th>
+              <th class="text-right px-4 py-3 font-black uppercase tracking-wider text-[11px]">Max Entry Rule</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200/70 dark:divide-slate-800/70">
+            @forelse(($ticketTypeStats ?? collect()) as $typeStat)
+              @php
+                $typeKey = strtoupper((string) $typeStat->ticket_type);
+                $policy = ($ticketTypePolicies ?? collect())->get($typeKey);
+              @endphp
+              <tr class="hover:bg-slate-50/60 transition dark:hover:bg-slate-950/30">
+                <td class="px-4 py-3">
+                  <span class="font-mono font-bold text-slate-900 dark:text-slate-100">{{ $typeKey }}</span>
+                </td>
+                <td class="px-4 py-3 text-slate-700 dark:text-slate-200">{{ number_format($typeStat->total_ticket) }}</td>
+                <td class="px-4 py-3 text-right">
+                  <form method="POST" action="{{ route('events.tickets.type-policy.upsert', $event) }}"
+                        class="inline-flex items-center gap-2">
+                    @csrf
+                    <input type="hidden" name="ticket_type" value="{{ $typeKey }}">
+                    <input type="number" name="max_entry_count" min="1" max="1000"
+                           value="{{ old('ticket_type') === $typeKey ? old('max_entry_count') : optional($policy)->max_entry_count }}"
+                           class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm
+                                  focus:outline-none focus:ring-4 focus:ring-slate-200/70
+                                  dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-100 dark:focus:ring-slate-700/50"
+                           placeholder="Unlimited">
+                    <button type="submit"
+                            class="inline-flex items-center justify-center px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold
+                                   dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900">
+                      Save
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            @empty
+              <tr>
+                <td colspan="3" class="px-4 py-6 text-center text-slate-500 dark:text-slate-400">
+                  Belum ada ticket type. Tambahkan ticket dulu untuk mengatur gate rule.
+                </td>
+              </tr>
+            @endforelse
+          </tbody>
+        </table>
+      </div>
+      @error('max_entry_count')
+        <div class="px-4 py-3 border-t border-rose-200 bg-rose-50 text-xs font-semibold text-rose-700
+                    dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">
+          {{ $message }}
+        </div>
+      @enderror
+    </div>
+
     {{-- Table Card --}}
     <div class="rounded-3xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm overflow-hidden
                 dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
@@ -74,11 +153,34 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
-          <span class="px-3 py-2 rounded-2xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700
-                       dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-200">
-            Manage
-          </span>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+          <form method="GET" action="{{ route('events.tickets.index', $event) }}" class="flex items-center gap-2">
+            <input type="text"
+                   name="q"
+                   value="{{ $q ?? '' }}"
+                   placeholder="Search code..."
+                   class="w-full sm:w-52 px-3 py-2.5 rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-900
+                          focus:outline-none focus:ring-4 focus:ring-slate-200/70
+                          dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-100 dark:focus:ring-slate-700/50">
+            <button type="submit"
+                    class="inline-flex items-center justify-center px-3 py-2.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
+                           text-slate-800 font-extrabold transition
+                           dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100">
+              Search
+            </button>
+          </form>
+          <a href="{{ route('events.tickets.create', $event) }}"
+             class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800
+                    text-white font-extrabold transition
+                    dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900">
+            + New Ticket
+          </a>
+          <a href="{{ route('events.tickets.bulk.form', $event) }}"
+             class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
+                    text-slate-800 font-extrabold transition
+                    dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100">
+            + Bulk CSV
+          </a>
         </div>
       </div>
 
@@ -87,8 +189,9 @@
           <thead class="bg-slate-50/70 text-slate-700 dark:bg-slate-950/40 dark:text-slate-200">
             <tr>
               <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Code</th>
-              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Owner</th>
-              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Status</th>
+              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Ticket Type</th>
+              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Check-in Status</th>
+              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Created</th>
               <th class="text-right px-4 py-3 font-black uppercase tracking-wider text-[11px]">Aksi</th>
             </tr>
           </thead>
@@ -104,32 +207,31 @@
                 </td>
 
                 <td class="px-4 py-4">
-                  <div class="font-semibold text-slate-900 dark:text-slate-100">{{ $t->owner_name ?? '-' }}</div>
-                  @if(!empty($t->owner_email))
-                    <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">{{ $t->owner_email }}</div>
+                  <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-extrabold
+                               bg-sky-50 border-sky-200 text-sky-700 dark:bg-sky-950/30 dark:border-sky-900/60 dark:text-sky-200">
+                    {{ strtoupper($t->ticket_type ?? 'REGULAR') }}
+                  </span>
+                </td>
+
+                <td class="px-4 py-4">
+                  @if(($t->valid_scan_count ?? 0) > 0)
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-extrabold
+                                 bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900/60 dark:text-emerald-200">
+                      <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                      CHECKED-IN
+                    </span>
+                  @else
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-extrabold
+                                 bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-950/40 dark:border-slate-800 dark:text-slate-200">
+                      <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+                      BELUM CHECK-IN
+                    </span>
                   @endif
                 </td>
 
                 <td class="px-4 py-4">
-                  @php
-                    $st = strtoupper((string) $t->status);
-                    $badge = 'bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-950/40 dark:border-slate-800 dark:text-slate-200';
-
-                    if (str_contains($st, 'VALID') || str_contains($st, 'ACTIVE')) {
-                      $badge = 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900/60 dark:text-emerald-200';
-                    } elseif (str_contains($st, 'DUP')) {
-                      $badge = 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/30 dark:border-amber-900/60 dark:text-amber-200';
-                    } elseif (str_contains($st, 'INVALID') || str_contains($st, 'INACTIVE') || str_contains($st, 'USED')) {
-                      $badge = 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/30 dark:border-rose-900/60 dark:text-rose-200';
-                    }
-                  @endphp
-
-                  <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-extrabold {{ $badge }}">
-                    <span class="h-2 w-2 rounded-full
-                      {{ str_contains($st,'VALID') || str_contains($st,'ACTIVE') ? 'bg-emerald-500' : (str_contains($st,'DUP') ? 'bg-amber-500' : (str_contains($st,'INVALID') || str_contains($st,'INACTIVE') || str_contains($st,'USED') ? 'bg-rose-500' : 'bg-slate-400')) }}">
-                    </span>
-                    {{ $t->status }}
-                  </span>
+                  <div class="font-semibold text-slate-900 dark:text-slate-100">{{ optional($t->created_at)->format('Y-m-d H:i') }}</div>
+                  <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">ID: {{ $t->id }}</div>
                 </td>
 
                 <td class="px-4 py-4">
@@ -156,7 +258,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="4" class="px-4 py-10 text-center">
+                <td colspan="5" class="px-4 py-10 text-center">
                   <div class="text-slate-500 dark:text-slate-400">Belum ada ticket.</div>
                   <div class="mt-3">
                     <a href="{{ route('events.tickets.create', $event) }}"

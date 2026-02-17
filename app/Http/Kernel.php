@@ -55,5 +55,6 @@ class Kernel extends HttpKernel
         // ✅ Middleware custom ASM-PORTAL
         'active'  => \App\Http\Middleware\EnsureUserActive::class,
         'forcepw' => \App\Http\Middleware\ForcePasswordReset::class,
+        'restrict.scan-gate' => \App\Http\Middleware\RestrictScanGateAccess::class,
     ];
 }

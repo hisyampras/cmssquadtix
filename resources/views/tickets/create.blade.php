@@ -20,7 +20,7 @@
           <div>
             <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">Create Ticket</h1>
             <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">
-              Event: <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $event->name }}</span>
+              Event: <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $event->event_code ?? '-' }} - {{ $event->name }}</span>
             </p>
           </div>
         </div>
@@ -71,29 +71,24 @@
           </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Owner Name</label>
-            <input name="owner_name"
-                   value="{{ old('owner_name') }}"
-                   class="w-full mt-2 px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
-                          focus:outline-none focus:ring-4 focus:ring-slate-200/70 transition
-                          font-semibold text-slate-900 placeholder:text-slate-400
-                          dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-slate-700/50"
-                   placeholder="Nama pemilik tiket (opsional)">
-          </div>
-
-          <div>
-            <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Owner Email</label>
-            <input name="owner_email"
-                   type="email"
-                   value="{{ old('owner_email') }}"
-                   class="w-full mt-2 px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
-                          focus:outline-none focus:ring-4 focus:ring-slate-200/70 transition
-                          font-semibold text-slate-900 placeholder:text-slate-400
-                          dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-slate-700/50"
-                   placeholder="email@domain.com (opsional)">
-          </div>
+        <div>
+          <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Ticket Type</label>
+          <input name="ticket_type"
+                 list="ticketTypeOptions"
+                 value="{{ old('ticket_type', 'REGULAR') }}"
+                 class="w-full mt-2 px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
+                        focus:outline-none focus:ring-4 focus:ring-slate-200/70 transition
+                        font-semibold text-slate-900 placeholder:text-slate-400
+                        dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-slate-700/50"
+                 placeholder="Contoh: REGULAR / VIP / VVIP">
+          <datalist id="ticketTypeOptions">
+            <option value="REGULAR"></option>
+            <option value="VIP"></option>
+            <option value="VVIP"></option>
+          </datalist>
+          @error('ticket_type')
+            <p class="mt-2 text-xs font-semibold text-rose-700 dark:text-rose-200">{{ $message }}</p>
+          @enderror
         </div>
 
         <div class="pt-2 flex flex-col sm:flex-row gap-2 sm:justify-end">

@@ -19,6 +19,17 @@ class AppServiceProvider extends ServiceProvider
 
         // (opsional) ability alias 'admin' agar kompatibel dengan kode lama
         Gate::define('admin', fn ($user) => ($user->role ?? null) === 'admin');
+
+        // scan mobile bisa dipakai role admin + scan_gate
+        Gate::define('scan-mobile', function ($user) {
+            if (method_exists($user, 'isAdmin') && $user->isAdmin()) {
+                return true;
+            }
+
+            return method_exists($user, 'isScanGate')
+                ? $user->isScanGate()
+                : strtolower((string) ($user->role ?? '')) === 'scan_gate';
+        });
     }
 
     public function register(): void

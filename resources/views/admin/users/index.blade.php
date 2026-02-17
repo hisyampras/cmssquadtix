@@ -68,6 +68,7 @@
             >
               <option value="">Semua role</option>
               <option value="admin" @selected(request('role')==='admin')>Admin</option>
+              <option value="scan_gate" @selected(request('role')==='scan_gate')>Scan Gate</option>
               <option value="user"  @selected(request('role')==='user')>User</option>
             </select>
           </div>

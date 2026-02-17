@@ -1,6 +1,6 @@
 {{-- resources/views/layouts/app.blade.php --}}
 <!doctype html>
-<html lang="id" class="h-full">
+<html lang="id" class="h-full perf-lite">
 
 <head>
   <meta charset="utf-8" />
@@ -83,11 +83,7 @@
     }
 
     body {
-      background: linear-gradient(135deg, #e5f0ff 0%, #f9fafb 50%, #e0ebff 100%);
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-attachment: fixed;
-
+      background: #f8fafc;
       color: var(--text-main);
       font-family: Inter, ui-sans-serif, system-ui;
       min-height: 100vh;
@@ -96,11 +92,19 @@
     }
 
     .dark body {
-      background: linear-gradient(135deg, #020617 0%, #020617 40%, #020617 100%);
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-attachment: fixed;
+      background: #020617;
     }
+
+    /* Performance-first mode: simplify costly visual effects globally. */
+    .perf-lite [class*="animate-"] { animation: none !important; }
+    .perf-lite [class*="transition"] { transition: none !important; }
+    .perf-lite [class*="bg-gradient"] { background-image: none !important; }
+    .perf-lite [class*="backdrop-blur"] {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    .perf-lite [class*="blur-"] { filter: none !important; }
+    .perf-lite [class*="shadow"] { box-shadow: none !important; }
 
     .transition-theme {
       transition: background-color .25s ease, color .25s ease, border-color .25s ease;
@@ -157,6 +161,9 @@
 @php
   $impersonating = session()->has('impersonator_id');
   $navItemBase = 'nav-item flex items-center gap-2 pl-3 pr-3 py-2 rounded-md transition-colors font-medium whitespace-nowrap overflow-hidden text-ellipsis hover:bg-[var(--sidebar-hover)]';
+  $currentRole = strtolower((string) (Auth::user()->role ?? 'user'));
+  $isScanGate = $currentRole === 'scan_gate';
+  $roleLabel = strtoupper($currentRole);
 @endphp
 
 @if($impersonating)
@@ -217,27 +224,29 @@
           <div class="space-y-3">
 
             {{-- DASHBOARD BUTTON --}}
-            <div data-nav-section>
-              <a href="{{ route('dashboard.index') }}"
-                data-nav-search-item
-                data-label="dashboard overview beranda home scan"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm transition-colors
-                {{ request()->routeIs('dashboard.*')
-                    ? 'bg-brand-blue/10 text-brand-blue border-brand-blue/60 shadow-sm'
-                    : 'bg-[var(--panel)] text-[var(--sidebar-text)] border-[var(--border)] hover:bg-[var(--sidebar-hover)]' }}">
-                <span class="inline-flex h-8 w-8 items-center justify-center rounded-2xl
-                     {{ request()->routeIs('dashboard.*') ? 'bg-brand-blue text-white' : 'bg-[var(--sidebar-hover)] text-brand-blue' }}">
-                  <i class="fa-solid fa-gauge-high text-sm"></i>
-                </span>
-                <div class="flex flex-col leading-tight" x-show="!sidebarMini" x-transition>
-                  <span class="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">Overview</span>
-                  <span class="text-sm font-semibold">Dashboard</span>
-                </div>
-              </a>
-            </div>
+            @unless($isScanGate)
+              <div data-nav-section>
+                <a href="{{ route('dashboard.index') }}"
+                  data-nav-search-item
+                  data-label="dashboard overview beranda home scan"
+                  class="flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm transition-colors
+                  {{ request()->routeIs('dashboard.*')
+                      ? 'bg-brand-blue/10 text-brand-blue border-brand-blue/60 shadow-sm'
+                      : 'bg-[var(--panel)] text-[var(--sidebar-text)] border-[var(--border)] hover:bg-[var(--sidebar-hover)]' }}">
+                  <span class="inline-flex h-8 w-8 items-center justify-center rounded-2xl
+                       {{ request()->routeIs('dashboard.*') ? 'bg-brand-blue text-white' : 'bg-[var(--sidebar-hover)] text-brand-blue' }}">
+                    <i class="fa-solid fa-gauge-high text-sm"></i>
+                  </span>
+                  <div class="flex flex-col leading-tight" x-show="!sidebarMini" x-transition>
+                    <span class="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">Overview</span>
+                    <span class="text-sm font-semibold">Dashboard</span>
+                  </div>
+                </a>
+              </div>
+            @endunless
 
             <!-- SEARCH SIDEBAR -->
-            <div x-show="!sidebarMini" x-transition>
+            <div x-show="!sidebarMini" x-transition @class(['hidden' => $isScanGate])>
               <div class="relative">
                 <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-[var(--text-muted)]">
                   <i class="fa-solid fa-magnifying-glass text-xs"></i>
@@ -281,17 +290,35 @@
                 <a href="{{ route('scan.index') }}"
                   data-nav-search-item
                   data-label="scan gate scanner checkin"
-                  class="{{ $navItemBase }} {{ request()->routeIs('scan.*') ? 'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' : '' }}">
+                  @class([
+                    $navItemBase,
+                    'hidden' => $isScanGate,
+                    'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' => request()->routeIs('scan.index'),
+                  ])>
                   <span class="w-6 flex justify-center text-[var(--text-muted)]">
                     <i class="fa-solid fa-qrcode text-sm"></i>
                   </span>
                   <span class="text-sm" x-show="!sidebarMini" x-transition>Scan Gate</span>
                 </a>
 
+                <a href="{{ route('scan.mobile') }}"
+                  data-nav-search-item
+                  data-label="scan mobile pdt handheld"
+                  class="{{ $navItemBase }} {{ request()->routeIs('scan.mobile') ? 'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' : '' }}">
+                  <span class="w-6 flex justify-center text-[var(--text-muted)]">
+                    <i class="fa-solid fa-mobile-screen-button text-sm"></i>
+                  </span>
+                  <span class="text-sm" x-show="!sidebarMini" x-transition>Scan Mobile</span>
+                </a>
+
                 <a href="{{ route('events.index') }}"
                   data-nav-search-item
                   data-label="events event acara master"
-                  class="{{ $navItemBase }} {{ request()->routeIs('events.*') ? 'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' : '' }}">
+                  @class([
+                    $navItemBase,
+                    'hidden' => $isScanGate,
+                    'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' => request()->routeIs('events.*'),
+                  ])>
                   <span class="w-6 flex justify-center text-[var(--text-muted)]">
                     <i class="fa-regular fa-calendar-days text-sm"></i>
                   </span>
@@ -304,7 +331,7 @@
 
           {{-- BOTTOM: ADMIN --}}
           @auth
-          @if (Auth::user()->isAdmin())
+          @can('manage-users')
             <div class="pt-3 mt-3">
               <section class="rounded-xl border border-[var(--border)] overflow-hidden transition-theme" data-nav-section>
                 <button type="button"
@@ -324,19 +351,19 @@
 
                 <div class="p-2 space-y-1 bg-[var(--sidebar-bg)] border-t border-[var(--border)]"
                   data-collapse-panel data-key="nav:admin">
-                  <a href="{{ route('admin.users.index') }}"
-                    data-nav-search-item
-                    data-label="user management admin pengguna"
-                    class="{{ $navItemBase }} {{ request()->routeIs('admin.users.*') ? 'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' : '' }}">
+                <a href="{{ route('admin.users.index') }}"
+                  data-nav-search-item
+                  data-label="user management admin pengguna"
+                  class="{{ $navItemBase }} {{ request()->routeIs('admin.users.*') ? 'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' : '' }}">
                     <span class="w-6 flex justify-center text-[var(--text-muted)]">
                       <i class="fa-solid fa-user-gear text-sm"></i>
                     </span>
-                    <span class="text-sm" x-show="!sidebarMini" x-transition>User Management</span>
+                    <span class="text-sm" x-show="!sidebarMini" x-transition>Manage Users</span>
                   </a>
                 </div>
               </section>
             </div>
-          @endif
+          @endcan
           @endauth
 
         </nav>
@@ -389,7 +416,7 @@
                 aria-haspopup="menu" aria-expanded="false">
                 <div class="hidden sm:flex flex-col items-end leading-tight">
                   <span class="text-xs sm:text-sm font-semibold text-[var(--panel-text)]">{{ Auth::user()->name ?? 'Admin' }}</span>
-                  <span class="text-[10px] sm:text-xs text-[var(--panel-text)]/60">Online</span>
+                  <span class="text-[10px] sm:text-xs text-[var(--panel-text)]/60">Role: {{ $roleLabel }}</span>
                 </div>
                 <div class="relative h-8 w-8 sm:h-9 sm:w-9">
                   <div class="absolute inset-0 rounded-full animate-spin-slow bg-gradient-to-tr from-brand-blue via-brand-cyan to-brand-dark"></div>
@@ -445,11 +472,9 @@
               <p class="text-sm font-semibold text-[var(--panel-text)] truncate">
                 {{ Auth::user()->name ?? 'User' }}
               </p>
-              @if(Auth::user()?->isAdmin())
-                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px]">
-                  Admin
-                </span>
-              @endif
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded-full border text-[10px] {{ $currentRole === 'admin' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' }}">
+                {{ $roleLabel }}
+              </span>
             </div>
             <p class="text-[11px] text-[var(--text-muted)] truncate">
               {{ Auth::user()->email ?? '-' }}

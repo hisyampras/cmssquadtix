@@ -1,0 +1,12 @@
+.git
+.gitignore
+.env
+.env.*
+node_modules
+vendor
+storage/*.key
+bootstrap/cache/*.php
+docker-compose*.yml
+README.md
+npm-debug.log
+yarn-error.log

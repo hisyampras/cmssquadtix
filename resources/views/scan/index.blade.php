@@ -70,7 +70,7 @@
                                focus:outline-none focus:ring-4 focus:ring-slate-200/70 font-semibold text-slate-900 transition
                                dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:focus:ring-slate-700/50">
                   @foreach($events as $e)
-                    <option value="{{ $e->id }}" @selected($e->id == $eventId)>{{ $e->id }} - {{ $e->name }}</option>
+                    <option value="{{ $e->id }}" @selected($e->id == $eventId)>{{ $e->event_code ?? '-' }} - {{ $e->name }}</option>
                   @endforeach
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500 dark:text-slate-400">
@@ -90,6 +90,37 @@
                             font-semibold text-slate-900 placeholder:text-slate-400
                             dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-slate-700/50"
                      placeholder="Contoh: Gate A / VIP / Entrance 1">
+            </div>
+          </div>
+
+          <div class="mt-5 rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4
+                      dark:border-slate-800/70 dark:bg-slate-950/30">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                  Allowed Ticket Types
+                </label>
+                <div id="typeSummary" class="text-xs text-slate-500 mt-1 dark:text-slate-400">
+                  Semua tipe diterima.
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="btnTypeAll" type="button"
+                        class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold
+                               dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100">
+                  Check All
+                </button>
+                <button id="btnTypeNone" type="button"
+                        class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold
+                               dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100">
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            <div id="typeFilters" class="mt-3 flex flex-wrap gap-2"></div>
+            <div id="typeEmpty" class="hidden mt-2 text-xs text-slate-500 dark:text-slate-400">
+              Belum ada ticket type untuk event ini. Semua scan akan dianggap valid tipe.
             </div>
           </div>
 
@@ -121,7 +152,7 @@
                           dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-slate-700/50"
                    placeholder="Scan barcode/QR di sini…"
                    autofocus
-                   inputmode="none"
+                   inputmode="text"
                    autocomplete="off"
                    autocapitalize="characters">
           </div>
@@ -164,11 +195,18 @@
                              dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white">
                 Retry
               </button>
+
+              {{-- Hide / Show camera --}}
+              <button id="btnCamToggle" type="button"
+                      class="px-3 py-2 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs
+                             dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100">
+                Hide Camera
+              </button>
             </div>
           </div>
 
           {{-- Camera stage --}}
-          <div class="relative">
+          <div id="cameraStage" class="relative">
             <div id="qrReader"
                  class="w-full bg-black aspect-[4/3] sm:aspect-video
                         border-t border-slate-200/70 dark:border-slate-800/70"></div>
@@ -303,6 +341,7 @@
 
 <script>
   const el = (id) => document.getElementById(id);
+  const EVENT_TICKET_TYPES = @json($eventTicketTypesByEventId ?? []);
 
   // -----------------------------
   // Preferences (Sound)
@@ -408,6 +447,91 @@
   });
 
   // -----------------------------
+  // Ticket Type Filters
+  // -----------------------------
+  function storageKeyForTypes() {
+    const eventId = String(el('event_id')?.value || '');
+    return `scan:allowed_types:${eventId}`;
+  }
+
+  function getSelectedTypes() {
+    return Array.from(document.querySelectorAll('.ticket-type-checkbox:checked'))
+      .map((node) => String(node.value || '').trim())
+      .filter(Boolean);
+  }
+
+  function updateTypeSummary() {
+    const selected = getSelectedTypes();
+    const summary = el('typeSummary');
+    if (!summary) return;
+
+    if (selected.length === 0) {
+      summary.textContent = 'Tidak ada yang dipilih (semua scan akan ditolak sebagai salah tipe).';
+      return;
+    }
+
+    summary.textContent = `Aktif: ${selected.join(', ')}`;
+  }
+
+  function persistTypeSelection() {
+    try {
+      localStorage.setItem(storageKeyForTypes(), JSON.stringify(getSelectedTypes()));
+    } catch (_) {}
+  }
+
+  function readPersistedTypes() {
+    try {
+      const raw = localStorage.getItem(storageKeyForTypes());
+      const parsed = JSON.parse(raw || '[]');
+      return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function renderTypeFilters() {
+    const wrap = el('typeFilters');
+    const empty = el('typeEmpty');
+    if (!wrap) return;
+
+    const eventId = String(el('event_id')?.value || '');
+    const types = (EVENT_TICKET_TYPES[eventId] || []).map((v) => String(v).trim()).filter(Boolean);
+    const persisted = readPersistedTypes();
+
+    wrap.innerHTML = '';
+    if (types.length === 0) {
+      if (empty) empty.classList.remove('hidden');
+      updateTypeSummary();
+      return;
+    }
+    if (empty) empty.classList.add('hidden');
+
+    const selectedSet = new Set((persisted.length ? persisted : types).map((v) => v.toUpperCase()));
+
+    types.forEach((type) => {
+      const id = `type_${type.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+      const checked = selectedSet.has(type.toUpperCase()) ? 'checked' : '';
+
+      wrap.insertAdjacentHTML('beforeend', `
+        <label for="${id}" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-xs font-bold
+                                   hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-100 dark:hover:bg-slate-950/50">
+          <input id="${id}" type="checkbox" value="${type}" class="ticket-type-checkbox h-3.5 w-3.5 rounded border-slate-300 text-slate-900 focus:ring-slate-400" ${checked}>
+          <span>${type}</span>
+        </label>
+      `);
+    });
+
+    document.querySelectorAll('.ticket-type-checkbox').forEach((node) => {
+      node.addEventListener('change', () => {
+        persistTypeSelection();
+        updateTypeSummary();
+      });
+    });
+
+    updateTypeSummary();
+  }
+
+  // -----------------------------
   // UI Result helper
   // -----------------------------
   function setPill(text, cls) {
@@ -435,6 +559,9 @@
     } else if (type === 'INVALID') {
       iconBox.classList.add('bg-rose-50','text-rose-700','border-rose-200','dark:bg-rose-950/30','dark:text-rose-200','dark:border-rose-900/60');
       svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />';
+    } else if (type === 'INVALID_TYPE') {
+      iconBox.classList.add('bg-orange-50','text-orange-700','border-orange-200','dark:bg-orange-950/30','dark:text-orange-200','dark:border-orange-900/60');
+      svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M6.938 4h10.124c1.54 0 2.502 1.667 1.732 3L13.732 17c-.77 1.333-2.694 1.333-3.464 0L5.206 7c-.77-1.333.192-3 1.732-3z" />';
     } else if (type === 'CHECKING') {
       iconBox.classList.add('bg-sky-50','text-sky-700','border-sky-200','dark:bg-sky-950/30','dark:text-sky-200','dark:border-sky-900/60');
       svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5 19a9 9 0 0114-7M19 5a9 9 0 00-14 7" />';
@@ -458,6 +585,9 @@
     } else if (r === 'INVALID') {
       box.classList.add('bg-rose-50/70','dark:bg-rose-950/20');
       setPill('INVALID', 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/30 dark:border-rose-900/60 dark:text-rose-200');
+    } else if (r === 'INVALID_TYPE') {
+      box.classList.add('bg-orange-50/70','dark:bg-orange-950/20');
+      setPill('WRONG TYPE', 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-950/30 dark:border-orange-900/60 dark:text-orange-200');
     } else if (r === 'CHECKING') {
       box.classList.add('bg-sky-50/70','dark:bg-sky-950/20');
       setPill('CHECK', 'bg-sky-50 border-sky-200 text-sky-700 dark:bg-sky-950/30 dark:border-sky-900/60 dark:text-sky-200');
@@ -468,7 +598,10 @@
     setIcon(r || 'READY');
     el('result').textContent = r || 'READY';
     el('message').textContent = message || '';
-    el('meta').textContent = `Event: ${el('event_id')?.value || '-'} • Gate: ${el('gate_name')?.value || '-'}`;
+    const selectedTypes = getSelectedTypes();
+    const allowedLabel = selectedTypes.length ? selectedTypes.join(', ') : '—';
+    const selectedEventLabel = el('event_id')?.selectedOptions?.[0]?.textContent?.trim() || '-';
+    el('meta').textContent = `Event: ${selectedEventLabel} • Gate: ${el('gate_name')?.value || '-'} • Allowed: ${allowedLabel}`;
   }
 
   // -----------------------------
@@ -478,10 +611,12 @@
     code = (code || '').trim();
     if(!code) return;
 
+    const hasTypeFilterOptions = document.querySelectorAll('.ticket-type-checkbox').length > 0;
     const payload = {
       event_id: Number(el('event_id').value),
       code: code,
-      gate_name: el('gate_name').value || null
+      gate_name: el('gate_name').value || null,
+      allowed_types: hasTypeFilterOptions ? getSelectedTypes() : null
     };
 
     ensureAudio();
@@ -518,9 +653,80 @@
     }
   });
 
+  // global scanner capture:
+  // many hardware scanners behave like keyboard-wedge and type very fast.
+  // this buffer lets scan work even when #code is not focused or scanner doesn't send Enter.
+  let scanBuffer = '';
+  let scanTimer = null;
+  const SCAN_IDLE_MS = 90;
+
+  function clearScanBuffer() {
+    scanBuffer = '';
+    if (scanTimer) {
+      clearTimeout(scanTimer);
+      scanTimer = null;
+    }
+  }
+
+  function scheduleBufferedSubmit() {
+    if (scanTimer) clearTimeout(scanTimer);
+    scanTimer = setTimeout(() => {
+      const candidate = (scanBuffer || '').trim();
+      if (candidate.length >= 6) submitScan(candidate);
+      clearScanBuffer();
+    }, SCAN_IDLE_MS);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    // ignore shortcuts/composition
+    if (e.isComposing || e.ctrlKey || e.altKey || e.metaKey) return;
+
+    const active = document.activeElement;
+    const isEditable =
+      active &&
+      (active.tagName === 'INPUT' ||
+        active.tagName === 'TEXTAREA' ||
+        active.isContentEditable);
+
+    // don't hijack normal typing when user is typing in any editable field
+    if (isEditable) return;
+
+    if (e.key === 'Enter') {
+      if (scanBuffer.trim()) {
+        e.preventDefault();
+        submitScan(scanBuffer.trim());
+        clearScanBuffer();
+      }
+      return;
+    }
+
+    // printable key only
+    if (e.key.length === 1) {
+      scanBuffer += e.key;
+      scheduleBufferedSubmit();
+    }
+  }, true);
+
   el('btnFocus')?.addEventListener('click', () => el('code')?.focus());
-  el('event_id')?.addEventListener('change', () => setBox(el('result')?.textContent, el('message')?.textContent));
+  el('event_id')?.addEventListener('change', () => {
+    renderTypeFilters();
+    setBox(el('result')?.textContent, el('message')?.textContent);
+  });
   el('gate_name')?.addEventListener('input', () => setBox(el('result')?.textContent, el('message')?.textContent));
+
+  el('btnTypeAll')?.addEventListener('click', () => {
+    document.querySelectorAll('.ticket-type-checkbox').forEach((node) => { node.checked = true; });
+    persistTypeSelection();
+    updateTypeSummary();
+    setBox(el('result')?.textContent, el('message')?.textContent);
+  });
+
+  el('btnTypeNone')?.addEventListener('click', () => {
+    document.querySelectorAll('.ticket-type-checkbox').forEach((node) => { node.checked = false; });
+    persistTypeSelection();
+    updateTypeSummary();
+    setBox(el('result')?.textContent, el('message')?.textContent);
+  });
 
   // -----------------------------
   // Fullscreen toggle
@@ -562,6 +768,7 @@
   // -----------------------------
   let qrScanner = null;
   let cameraRunning = false;
+  let cameraHidden = false;
   let desiredFacingMode = "environment"; // back camera
   let lastDecodeAt = 0;
 
@@ -604,7 +811,7 @@
     pill.textContent = (desiredFacingMode === "environment") ? "BACK" : "FRONT";
   }
 
-  function isSecureEnoughForIOS() {
+  function isSecureContextForCamera() {
     return window.isSecureContext || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   }
 
@@ -624,6 +831,8 @@
   }
 
   async function startCamera(){
+    if (cameraHidden) return;
+
     setCamFacingUI();
 
     if (!window.Html5Qrcode) {
@@ -632,9 +841,10 @@
       return;
     }
 
-    if (!isSecureEnoughForIOS()) {
-      // jangan terlalu “panik”, cukup hint singkat
-      setCamHint('Jika iPhone: kamera butuh HTTPS / secure context.');
+    if (!isSecureContextForCamera()) {
+      setCamState('BLOCKED');
+      setCamHint('Kamera browser butuh HTTPS (atau localhost).');
+      return;
     }
 
     if (cameraRunning) return;
@@ -706,6 +916,30 @@
     await startCamera();
   });
 
+  async function setCameraHidden(hidden) {
+    cameraHidden = hidden;
+    const stage = el('cameraStage');
+    const btn = el('btnCamToggle');
+
+    if (cameraHidden) {
+      await stopCamera();
+      if (stage) stage.classList.add('hidden');
+      if (btn) btn.textContent = 'Show Camera';
+      setCamState('HIDDEN');
+      setCamHint('Camera disembunyikan.');
+      return;
+    }
+
+    if (stage) stage.classList.remove('hidden');
+    if (btn) btn.textContent = 'Hide Camera';
+    setCamHint('Retry…');
+    await startCamera();
+  }
+
+  el('btnCamToggle')?.addEventListener('click', async () => {
+    await setCameraHidden(!cameraHidden);
+  });
+
   // Sound toggle click
   el('btnSound')?.addEventListener('click', () => {
     soundEnabled = !soundEnabled;
@@ -718,6 +952,7 @@
   // -----------------------------
   document.addEventListener('DOMContentLoaded', () => {
     updateFsBtn();
+    renderTypeFilters();
     setBox('READY', 'Scan ticket…');
     renderRecent();
 
