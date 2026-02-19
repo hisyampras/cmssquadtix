@@ -38,6 +38,7 @@ return Illuminate\Foundation\Application::configure(basePath: dirname(__DIR__))
             // ✅ Middleware kustom ASM PORTAL
             'active'  => \App\Http\Middleware\EnsureUserActive::class,
             'forcepw' => \App\Http\Middleware\ForcePasswordReset::class,
+            'restrict.scan-gate' => \App\Http\Middleware\RestrictScanGateAccess::class,
         ]);
     })
     ->withExceptions(function ($exceptions) {

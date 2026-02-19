@@ -1,11 +1,13 @@
 <!doctype html>
-<html lang="id" class="h-full">
+<html lang="id" class="h-full perf-lite">
 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>Login • Squadtix</title>
   <link rel="icon" type="image/x-icon" href="{{ asset('images/logo-squadtix.png') }}">
+
 
   <!-- Inter + Tailwind CDN -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

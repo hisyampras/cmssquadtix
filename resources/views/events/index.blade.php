@@ -83,7 +83,7 @@
               <tr class="hover:bg-slate-50/50 transition dark:hover:bg-slate-950/30">
                 <td class="px-5 py-4">
                   <div class="font-extrabold text-slate-900 dark:text-slate-100">{{ $e->name }}</div>
-                  <div class="text-xs text-slate-500 mt-0.5 dark:text-slate-400">ID: {{ $e->id }}</div>
+                  <div class="text-xs text-slate-500 mt-0.5 dark:text-slate-400">Code: {{ $e->event_code ?? '-' }}</div>
                 </td>
 
                 <td class="px-5 py-4 text-slate-700 dark:text-slate-200">
@@ -105,7 +105,7 @@
                     <a href="{{ route('events.tickets.index', $e) }}"
                        class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-bold shadow-sm transition
                               dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:shadow-none">
-                      Tickets
+                      Manage Tickets
                     </a>
 
                     <a href="{{ route('events.edit', $e) }}"

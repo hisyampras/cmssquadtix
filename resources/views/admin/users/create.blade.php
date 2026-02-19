@@ -55,6 +55,7 @@
           class="w-full rounded-lg border border-[var(--border)] bg-[var(--panel)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/50"
         >
           <option value="user"  @selected(old('role','user')==='user')>user</option>
+          <option value="scan_gate" @selected(old('role')==='scan_gate')>scan_gate</option>
           <option value="admin" @selected(old('role')==='admin')>admin</option>
         </select>
       </div>

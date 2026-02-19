@@ -28,6 +28,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = $request->user();
+        if ($user && method_exists($user, 'isScanGate') && $user->isScanGate()) {
+            return redirect()->route('scan.mobile');
+        }
+
         return redirect()->intended(route('dashboard.index', absolute: false));
     }
 

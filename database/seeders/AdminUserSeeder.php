@@ -15,6 +15,8 @@ class AdminUserSeeder extends Seeder
             [
                 'name' => 'Squadtix Admin',
                 'password' => Hash::make('SquadTix!2025'),
+                'role' => 'admin',
+                'status' => 'active',
             ]
         );
     }

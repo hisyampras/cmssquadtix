@@ -20,7 +20,7 @@
           <div>
             <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">Edit Ticket</h1>
             <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">
-              Event: <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $event->name }}</span>
+              Event: <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $event->event_code ?? '-' }} - {{ $event->name }}</span>
             </p>
           </div>
         </div>
@@ -64,59 +64,24 @@
           @enderror
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Owner Name</label>
-            <input name="owner_name"
-                   value="{{ old('owner_name', $ticket->owner_name) }}"
-                   class="w-full mt-2 px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
-                          focus:outline-none focus:ring-4 focus:ring-slate-200/70 transition
-                          font-semibold text-slate-900 placeholder:text-slate-400
-                          dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-slate-700/50"
-                   placeholder="Nama pemilik tiket (opsional)">
-          </div>
-
-          <div>
-            <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Owner Email</label>
-            <input name="owner_email"
-                   type="email"
-                   value="{{ old('owner_email', $ticket->owner_email) }}"
-                   class="w-full mt-2 px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
-                          focus:outline-none focus:ring-4 focus:ring-slate-200/70 transition
-                          font-semibold text-slate-900 placeholder:text-slate-400
-                          dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-slate-700/50"
-                   placeholder="email@domain.com (opsional)">
-          </div>
-        </div>
-
         <div>
-          <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Status</label>
-          <div class="mt-2 relative">
-            <select name="status"
-                    class="w-full appearance-none px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
-                           focus:outline-none focus:ring-4 focus:ring-slate-200/70 font-extrabold text-slate-900 transition
-                           dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:focus:ring-slate-700/50">
-              @foreach(['valid','used','void'] as $s)
-                <option value="{{ $s }}" {{ old('status', $ticket->status) === $s ? 'selected' : '' }}>
-                  {{ strtoupper($s) }}
-                </option>
-              @endforeach
-            </select>
-            <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500 dark:text-slate-400">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
-              </svg>
-            </div>
-          </div>
-
-          <div class="mt-3 flex flex-wrap gap-2">
-            <span class="px-3 py-1.5 rounded-2xl text-xs font-bold border border-slate-200 bg-white text-slate-700
-                         dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-200">VALID = bisa masuk</span>
-            <span class="px-3 py-1.5 rounded-2xl text-xs font-bold border border-slate-200 bg-white text-slate-700
-                         dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-200">USED = sudah dipakai</span>
-            <span class="px-3 py-1.5 rounded-2xl text-xs font-bold border border-slate-200 bg-white text-slate-700
-                         dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-200">VOID = dibatalkan</span>
-          </div>
+          <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Ticket Type</label>
+          <input name="ticket_type"
+                 list="ticketTypeOptions"
+                 value="{{ old('ticket_type', $ticket->ticket_type) }}"
+                 class="w-full mt-2 px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
+                        focus:outline-none focus:ring-4 focus:ring-slate-200/70 transition
+                        font-semibold text-slate-900 placeholder:text-slate-400
+                        dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-slate-700/50"
+                 placeholder="Contoh: REGULAR / VIP / VVIP">
+          <datalist id="ticketTypeOptions">
+            <option value="REGULAR"></option>
+            <option value="VIP"></option>
+            <option value="VVIP"></option>
+          </datalist>
+          @error('ticket_type')
+            <p class="mt-2 text-xs font-semibold text-rose-700 dark:text-rose-200">{{ $message }}</p>
+          @enderror
         </div>
 
         <div class="pt-2 flex flex-col sm:flex-row gap-2 sm:justify-end">

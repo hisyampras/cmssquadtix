@@ -58,6 +58,7 @@
                  text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-brand-blue/50"
         >
           <option value="user"  @selected(old('role', $user->role)==='user')>User</option>
+          <option value="scan_gate" @selected(old('role', $user->role)==='scan_gate')>Scan Gate</option>
           <option value="admin" @selected(old('role', $user->role)==='admin')>Admin</option>
         </select>
       </div>

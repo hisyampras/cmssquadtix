@@ -54,7 +54,7 @@
                              focus:outline-none focus:ring-4 focus:ring-slate-200/70 font-semibold text-slate-900 transition
                              dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:focus:ring-slate-700/50">
                 @foreach($events as $e)
-                  <option value="{{ $e->id }}" @selected($e->id == $eventId)>{{ $e->id }} - {{ $e->name }}</option>
+                  <option value="{{ $e->id }}" @selected($e->id == $eventId)>{{ $e->event_code ?? '-' }} - {{ $e->name }}</option>
                 @endforeach
               </select>
               <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500 dark:text-slate-400">
@@ -111,7 +111,7 @@
                   dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-xs font-bold text-emerald-600 uppercase tracking-wider dark:text-emerald-300">Valid Today</div>
+            <div class="text-xs font-bold text-emerald-600 uppercase tracking-wider dark:text-emerald-300">Checked-in Today</div>
             <div id="k_validToday" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
           </div>
           <div class="h-11 w-11 rounded-2xl bg-emerald-50 text-emerald-700 grid place-items-center
@@ -121,14 +121,14 @@
             </svg>
           </div>
         </div>
-        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Jumlah scan valid hari ini.</p>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Unique tiket valid hari ini.</p>
       </div>
 
       <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
                   dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-xs font-bold text-indigo-600 uppercase tracking-wider dark:text-indigo-300">Valid Month</div>
+            <div class="text-xs font-bold text-indigo-600 uppercase tracking-wider dark:text-indigo-300">Checked-in Month</div>
             <div id="k_validMonth" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
           </div>
           <div class="h-11 w-11 rounded-2xl bg-indigo-50 text-indigo-700 grid place-items-center
@@ -138,14 +138,14 @@
             </svg>
           </div>
         </div>
-        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Akumulasi valid bulan berjalan.</p>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Unique tiket valid bulan berjalan.</p>
       </div>
 
       <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
                   dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider dark:text-slate-400">Valid All</div>
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider dark:text-slate-400">Checked-in All</div>
             <div id="k_validAll" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
           </div>
           <div class="h-11 w-11 rounded-2xl bg-slate-100 text-slate-700 grid place-items-center
@@ -155,7 +155,7 @@
             </svg>
           </div>
         </div>
-        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Total scan valid sepanjang event.</p>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Unique tiket valid sepanjang event.</p>
       </div>
 
       <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
@@ -200,7 +200,7 @@
         <div class="p-5 border-b border-slate-200/70 flex items-center justify-between dark:border-slate-800/70">
           <div>
             <div class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Top Gate</div>
-            <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">Gate dengan scan terbanyak (event terpilih).</div>
+            <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">Per gate: unique valid + total attempt.</div>
           </div>
           <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-slate-900 text-white
                        dark:bg-slate-100 dark:text-slate-900">Live</span>
@@ -222,6 +222,19 @@
         </div>
         <div class="p-5">
           <div id="recent" class="text-sm text-slate-700 leading-relaxed dark:text-slate-200">-</div>
+          <div class="mt-3 flex items-center justify-between gap-2">
+            <button id="recentPrev"
+                    class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed
+                           dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-200 dark:hover:bg-slate-950/50">
+              Prev
+            </button>
+            <div id="recentPageInfo" class="text-xs text-slate-500 dark:text-slate-400">Page 1/1</div>
+            <button id="recentNext"
+                    class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed
+                           dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-200 dark:hover:bg-slate-950/50">
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -241,6 +254,47 @@
     try { return new Intl.NumberFormat('id-ID').format(Number(n ?? 0)); }
     catch { return String(n ?? 0); }
   };
+  const RECENT_PAGE_SIZE = 10;
+  let recentRows = [];
+  let recentPage = 1;
+
+  function renderRecentPage() {
+    const totalPages = Math.max(1, Math.ceil(recentRows.length / RECENT_PAGE_SIZE));
+    recentPage = Math.min(Math.max(recentPage, 1), totalPages);
+
+    const start = (recentPage - 1) * RECENT_PAGE_SIZE;
+    const pageRows = recentRows.slice(start, start + RECENT_PAGE_SIZE);
+
+    const recHtml = pageRows.map(r => {
+      const t = (r.scanned_at ?? '').replace('T',' ').substring(0,19);
+      const gate = r.gate_name ? `• ${r.gate_name}` : '';
+      const result = String(r.scan_result ?? '').toUpperCase();
+
+      let badgeClass = 'bg-slate-100 text-slate-700 dark:bg-slate-950/40 dark:text-slate-200 dark:border dark:border-slate-800';
+      if (result.includes('VALID')) badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 dark:border dark:border-emerald-900/60';
+      if (result.includes('DUP')) badgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200 dark:border dark:border-amber-900/60';
+      if (result.includes('INVALID') || result.includes('FAIL')) badgeClass = 'bg-rose-100 text-rose-800 dark:bg-rose-950/30 dark:text-rose-200 dark:border dark:border-rose-900/60';
+
+      return `
+        <div class="py-2 border-b border-slate-200/60 last:border-b-0 dark:border-slate-800/70">
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-extrabold px-2 py-1 rounded-lg ${badgeClass}">${result || '-'}</span>
+            <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">${t || '-'}</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400">${gate}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (el('recent')) {
+      el('recent').innerHTML = recHtml || '<span class="text-slate-500 dark:text-slate-400">-</span>';
+    }
+    if (el('recentPageInfo')) {
+      el('recentPageInfo').textContent = `Page ${recentPage}/${totalPages}`;
+    }
+    if (el('recentPrev')) el('recentPrev').disabled = recentPage <= 1;
+    if (el('recentNext')) el('recentNext').disabled = recentPage >= totalPages;
+  }
 
   async function loadData() {
     const btn = el('btnRefresh');
@@ -253,7 +307,7 @@
       const eventSelect = el('eventSelect');
       const eventId = eventSelect ? eventSelect.value : null;
 
-      const url = new URL("{{ route('dashboard.index') }}");
+      const url = new URL("{{ route('dashboard.data') }}");
       if (eventId) url.searchParams.set('event_id', eventId);
 
       const res = await fetch(url, { headers: {'Accept':'application/json'} });
@@ -290,37 +344,24 @@
 
       const gateHtml = (data.byGate || []).map(g => {
         const name = g.gate_name ?? '-';
-        const total = fmt(g.total ?? 0);
+        const validUnique = fmt(g.valid_unique ?? 0);
+        const totalAttempt = fmt(g.total_attempt ?? 0);
         return `
           <div class="flex items-center justify-between py-2 border-b border-slate-200/60 last:border-b-0 dark:border-slate-800/70">
             <div class="font-semibold text-slate-800 dark:text-slate-100">${name}</div>
-            <div class="text-sm font-extrabold text-slate-900 dark:text-slate-100">${total}</div>
+            <div class="text-right">
+              <div class="text-sm font-extrabold text-slate-900 dark:text-slate-100">${validUnique}</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400">attempt ${totalAttempt}</div>
+            </div>
           </div>
         `;
       }).join('');
       if (el('byGate')) el('byGate').innerHTML = gateHtml || '<span class="text-slate-500 dark:text-slate-400">-</span>';
 
-      const recHtml = (data.recent || []).map(r => {
-        const t = (r.scanned_at ?? '').replace('T',' ').substring(0,19);
-        const gate = r.gate_name ? `• ${r.gate_name}` : '';
-        const result = String(r.scan_result ?? '').toUpperCase();
-
-        let badgeClass = 'bg-slate-100 text-slate-700 dark:bg-slate-950/40 dark:text-slate-200 dark:border dark:border-slate-800';
-        if (result.includes('VALID')) badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 dark:border dark:border-emerald-900/60';
-        if (result.includes('DUP')) badgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200 dark:border dark:border-amber-900/60';
-        if (result.includes('INVALID') || result.includes('FAIL')) badgeClass = 'bg-rose-100 text-rose-800 dark:bg-rose-950/30 dark:text-rose-200 dark:border dark:border-rose-900/60';
-
-        return `
-          <div class="py-2 border-b border-slate-200/60 last:border-b-0 dark:border-slate-800/70">
-            <div class="flex items-center gap-2">
-              <span class="text-[11px] font-extrabold px-2 py-1 rounded-lg ${badgeClass}">${result || '-'}</span>
-              <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">${t || '-'}</span>
-              <span class="text-xs text-slate-500 dark:text-slate-400">${gate}</span>
-            </div>
-          </div>
-        `;
-      }).join('');
-      if (el('recent')) el('recent').innerHTML = recHtml || '<span class="text-slate-500 dark:text-slate-400">-</span>';
+      recentRows = Array.isArray(data.recent) ? data.recent : [];
+      const maxPages = Math.max(1, Math.ceil(recentRows.length / RECENT_PAGE_SIZE));
+      if (recentPage > maxPages) recentPage = 1;
+      renderRecentPage();
 
       if (el('last')) el('last').textContent = new Date().toLocaleString('id-ID');
     } catch (e) {
@@ -335,6 +376,14 @@
 
   const btn = el('btnRefresh');
   if (btn) btn.addEventListener('click', loadData);
+  el('recentPrev')?.addEventListener('click', () => {
+    recentPage -= 1;
+    renderRecentPage();
+  });
+  el('recentNext')?.addEventListener('click', () => {
+    recentPage += 1;
+    renderRecentPage();
+  });
 
   const sel = el('eventSelect');
   if (sel) {
@@ -347,6 +396,6 @@
   }
 
   loadData();
-  setInterval(loadData, 5000);
+  setInterval(loadData, 12000);
 </script>
 @endsection

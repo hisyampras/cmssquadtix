@@ -56,7 +56,12 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return ($this->role ?? null) === 'admin';
+        return strtolower((string) ($this->role ?? '')) === 'admin';
+    }
+
+    public function isScanGate(): bool
+    {
+        return strtolower((string) ($this->role ?? '')) === 'scan_gate';
     }
 
 }

@@ -15,18 +15,27 @@ Route::get('/', fn () => redirect()->route('login'))->middleware('guest');
 // ======================
 // 🔒 ROUTE UTAMA (USER LOGIN)
 // ======================
-Route::middleware(['auth', 'active', 'forcepw'])->group(function () {
+Route::middleware(['auth', 'active', 'forcepw', 'restrict.scan-gate'])->group(function () {
 
     // HOME → dashboard scan
-    Route::get('/', fn () => redirect()->route('dashboard.index'))->name('home');
+    Route::get('/', function () {
+        $user = auth()->user();
+        if ($user && method_exists($user, 'isScanGate') && $user->isScanGate()) {
+            return redirect()->route('scan.mobile');
+        }
+
+        return redirect()->route('dashboard.index');
+    })->name('home');
 
     // Dashboard (scan)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
-    // kalau sudah tidak kepakai, boleh hapus route data ini
-    // Route::get('/dashboard/data', [DashboardController::class, 'data'])->name('dashboard.data');
+    Route::get('/dashboard/data', [DashboardController::class, 'data'])->name('dashboard.data');
 
     // Scan Gate
     Route::get('/scan', [ScanGateController::class, 'index'])->name('scan.index');
+    Route::get('/scan/mobile', [ScanGateController::class, 'mobile'])
+        ->middleware('can:scan-mobile')
+        ->name('scan.mobile');
     Route::post('/scan', [ScanGateController::class, 'scan'])->name('scan.do');
 
     // Events
@@ -42,6 +51,10 @@ Route::middleware(['auth', 'active', 'forcepw'])->group(function () {
             Route::get('/tickets',                [TicketController::class, 'index'])->name('tickets.index');
             Route::get('/tickets/create',         [TicketController::class, 'create'])->name('tickets.create');
             Route::post('/tickets',               [TicketController::class, 'store'])->name('tickets.store');
+            Route::get('/tickets/bulk',           [TicketController::class, 'bulkForm'])->name('tickets.bulk.form');
+            Route::post('/tickets/bulk',          [TicketController::class, 'bulkStore'])->name('tickets.bulk.store');
+            Route::get('/tickets/template.csv',   [TicketController::class, 'downloadTemplate'])->name('tickets.template');
+            Route::post('/tickets/type-policy',   [TicketController::class, 'upsertTypePolicy'])->name('tickets.type-policy.upsert');
 
             Route::get('/tickets/{ticket}/edit',  [TicketController::class, 'edit'])->name('tickets.edit');
             Route::put('/tickets/{ticket}',       [TicketController::class, 'update'])->name('tickets.update');
@@ -55,7 +68,7 @@ Route::middleware(['auth', 'active', 'forcepw'])->group(function () {
 // ======================
 // 👤 PROFILE
 // ======================
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'restrict.scan-gate'])->group(function () {
     Route::get('/profile',  [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

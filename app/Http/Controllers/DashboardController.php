@@ -36,19 +36,25 @@ class DashboardController extends Controller
         $validToday = DB::table('scan_logs')
             ->where('event_id', $eventId)
             ->where('scan_result', 'VALID')
+            ->whereNotNull('ticket_id')
             ->where('scanned_at', '>=', $today)
-            ->count();
+            ->distinct()
+            ->count('ticket_id');
 
         $validMonth = DB::table('scan_logs')
             ->where('event_id', $eventId)
             ->where('scan_result', 'VALID')
+            ->whereNotNull('ticket_id')
             ->where('scanned_at', '>=', $monthStart)
-            ->count();
+            ->distinct()
+            ->count('ticket_id');
 
         $validAll = DB::table('scan_logs')
             ->where('event_id', $eventId)
             ->where('scan_result', 'VALID')
-            ->count();
+            ->whereNotNull('ticket_id')
+            ->distinct()
+            ->count('ticket_id');
 
         $dupAll = DB::table('scan_logs')
             ->where('event_id', $eventId)
@@ -57,15 +63,19 @@ class DashboardController extends Controller
 
         $invalidAll = DB::table('scan_logs')
             ->where('event_id', $eventId)
-            ->where('scan_result', 'INVALID')
+            ->whereIn('scan_result', ['INVALID', 'INVALID_TYPE'])
             ->count();
 
         $byGate = DB::table('scan_logs')
-            ->select('gate_name', DB::raw('COUNT(*) as total'))
+            ->selectRaw("
+                COALESCE(gate_name, 'NO_GATE') as gate_name,
+                COUNT(*) as total_attempt,
+                COUNT(DISTINCT CASE WHEN scan_result = 'VALID' THEN ticket_id END) as valid_unique
+            ")
             ->where('event_id', $eventId)
-            ->whereNotNull('gate_name')
             ->groupBy('gate_name')
-            ->orderByDesc('total')
+            ->orderByDesc('valid_unique')
+            ->orderByDesc('total_attempt')
             ->limit(10)
             ->get();
 
