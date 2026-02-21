@@ -17,8 +17,14 @@ class TicketController extends Controller
 
         $tickets = Ticket::where('event_id', $event->id)
             ->when($q !== '', fn ($query) => $query->where('code', 'like', '%' . strtoupper($q) . '%'))
-            ->withCount([
-                'scans as valid_scan_count' => fn ($subQuery) => $subQuery->where('scan_result', 'VALID'),
+            ->addSelect([
+                'latest_status_tickets_id' => DB::table('scan_logs')
+                    ->select('status_tickets_id')
+                    ->whereColumn('scan_logs.ticket_id', 'tickets.id')
+                    ->where('scan_logs.event_id', $event->id)
+                    ->orderByDesc('scan_logs.scanned_at')
+                    ->orderByDesc('scan_logs.id')
+                    ->limit(1),
             ])
             ->orderByDesc('id')
             ->paginate(15)

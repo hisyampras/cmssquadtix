@@ -214,17 +214,36 @@
                 </td>
 
                 <td class="px-4 py-4">
-                  @if(($t->valid_scan_count ?? 0) > 0)
+                  @php $statusId = (int) ($t->latest_status_tickets_id ?? 1); @endphp
+                  @if($statusId === 2)
                     <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-extrabold
                                  bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900/60 dark:text-emerald-200">
                       <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                      CHECKED-IN
+                      CHECKIN
+                    </span>
+                  @elseif($statusId === 4)
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-extrabold
+                                 bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/30 dark:border-indigo-900/60 dark:text-indigo-200">
+                      <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
+                      RECHECKIN
+                    </span>
+                  @elseif($statusId === 3)
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-extrabold
+                                 bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/30 dark:border-amber-900/60 dark:text-amber-200">
+                      <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+                      CHECKOUT
+                    </span>
+                  @elseif($statusId === 5)
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-extrabold
+                                 bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/30 dark:border-rose-900/60 dark:text-rose-200">
+                      <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+                      RECHECKOUT
                     </span>
                   @else
                     <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-extrabold
                                  bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-950/40 dark:border-slate-800 dark:text-slate-200">
                       <span class="h-2 w-2 rounded-full bg-slate-400"></span>
-                      BELUM CHECK-IN
+                      PENDING
                     </span>
                   @endif
                 </td>
