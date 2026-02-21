@@ -36,6 +36,10 @@ Route::middleware(['auth', 'active', 'forcepw', 'restrict.scan-gate'])->group(fu
     Route::get('/scan/mobile', [ScanGateController::class, 'mobile'])
         ->middleware('can:scan-mobile')
         ->name('scan.mobile');
+    Route::get('/scan/out', [ScanGateController::class, 'out'])->name('scan.out');
+    Route::get('/scan/out/mobile', [ScanGateController::class, 'mobileOut'])
+        ->middleware('can:scan-mobile')
+        ->name('scan.out.mobile');
     Route::post('/scan', [ScanGateController::class, 'scan'])->name('scan.do');
 
     // Events

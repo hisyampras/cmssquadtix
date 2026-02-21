@@ -18,7 +18,10 @@
             </svg>
           </div>
           <div>
-            <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">Scan Gate</h1>
+            <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+              Scan Gate
+              <span class="ml-2 inline-flex items-center px-2.5 py-1 rounded-full border text-[11px] font-black tracking-widest uppercase bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900/60 dark:text-emerald-200">IN</span>
+            </h1>
             <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">
               Hardware scanner utama • Kamera sebagai opsi cepat
             </p>
@@ -405,6 +408,7 @@
     if (!soundEnabled) return;
     const r = String(result || '').toUpperCase();
     if (r === 'VALID') { beep(980, 0.08, 'triangle', 0.07); setTimeout(()=>beep(1310, 0.08, 'triangle', 0.07), 90); }
+    else if (r === 'WARNING') { beep(520, 0.12, 'sine', 0.06); }
     else if (r === 'DUPLICATE' || r === 'DUP') { beep(660, 0.12, 'sine', 0.06); }
     else if (r === 'INVALID') { beep(220, 0.18, 'sawtooth', 0.05); }
     else if (r === 'CHECKING') { beep(520, 0.06, 'sine', 0.03); }
@@ -417,6 +421,7 @@
     const r = String(result || '').toUpperCase();
     if (!navigator.vibrate) return;
     if (r === 'VALID') navigator.vibrate([40, 40, 40]);
+    else if (r === 'WARNING') navigator.vibrate([60, 40, 60]);
     else if (r === 'DUPLICATE' || r === 'DUP') navigator.vibrate([80]);
     else if (r === 'INVALID') navigator.vibrate([120, 60, 120]);
   }
@@ -553,6 +558,9 @@
     if (type === 'VALID') {
       iconBox.classList.add('bg-emerald-50','text-emerald-700','border-emerald-200','dark:bg-emerald-950/30','dark:text-emerald-200','dark:border-emerald-900/60');
       svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />';
+    } else if (type === 'WARNING') {
+      iconBox.classList.add('bg-amber-50','text-amber-700','border-amber-200','dark:bg-amber-950/30','dark:text-amber-200','dark:border-amber-900/60');
+      svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M6.938 4h10.124c1.54 0 2.502 1.667 1.732 3L13.732 17c-.77 1.333-2.694 1.333-3.464 0L5.206 7c-.77-1.333.192-3 1.732-3z" />';
     } else if (type === 'DUPLICATE' || type === 'DUP') {
       iconBox.classList.add('bg-amber-50','text-amber-700','border-amber-200','dark:bg-amber-950/30','dark:text-amber-200','dark:border-amber-900/60');
       svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8M8 16h8M8 8h8" />';
@@ -579,6 +587,9 @@
     if (r === 'VALID') {
       box.classList.add('bg-emerald-50/70','dark:bg-emerald-950/20');
       setPill('VALID', 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900/60 dark:text-emerald-200');
+    } else if (r === 'WARNING') {
+      box.classList.add('bg-amber-50/70','dark:bg-amber-950/20');
+      setPill('WARNING', 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/30 dark:border-amber-900/60 dark:text-amber-200');
     } else if (r === 'DUPLICATE' || r === 'DUP') {
       box.classList.add('bg-amber-50/70','dark:bg-amber-950/20');
       setPill('DUP', 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/30 dark:border-amber-900/60 dark:text-amber-200');
@@ -616,6 +627,7 @@
       event_id: Number(el('event_id').value),
       code: code,
       gate_name: el('gate_name').value || null,
+      mode: 'in',
       allowed_types: hasTypeFilterOptions ? getSelectedTypes() : null
     };
 

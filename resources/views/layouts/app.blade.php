@@ -368,13 +368,13 @@
               <div class="p-2 space-y-1 bg-[var(--sidebar-bg)] border-t border-[var(--border)]"
                 data-collapse-panel data-key="nav:scan-out">
 
-                <a href="{{ route('scan.index') }}"
+                <a href="{{ route('scan.out') }}"
                   data-nav-search-item
                   data-label="scan gate scanner checkout"
                   @class([
                     $navItemBase,
                     'hidden' => $isScanGate,
-                    'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' => request()->routeIs('scan.index'),
+                    'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' => request()->routeIs('scan.out'),
                   ])>
                   <span class="w-6 flex justify-center text-[var(--text-muted)]">
                     <i class="fa-solid fa-qrcode text-sm"></i>
@@ -382,10 +382,10 @@
                   <span class="text-sm" x-show="!sidebarMini" x-transition>Scan Gate</span>
                 </a>
 
-                <a href="{{ route('scan.mobile') }}"
+                <a href="{{ route('scan.out.mobile') }}"
                   data-nav-search-item
                   data-label="scan mobile pdt handheld checkout"
-                  class="{{ $navItemBase }} {{ request()->routeIs('scan.mobile') ? 'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' : '' }}">
+                  class="{{ $navItemBase }} {{ request()->routeIs('scan.out.mobile') ? 'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' : '' }}">
                   <span class="w-6 flex justify-center text-[var(--text-muted)]">
                     <i class="fa-solid fa-mobile-screen-button text-sm"></i>
                   </span>
@@ -763,5 +763,4 @@
 </body>
 
 </html>
-
 

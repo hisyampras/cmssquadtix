@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ScanLog extends Model
 {
-    protected $fillable = ['event_id','ticket_id','gate_name','scan_result','scanned_at'];
+    protected $fillable = ['event_id','ticket_id','status_tickets_id','gate_name','scan_result','scanned_at'];
 
     protected $casts = [
         'scanned_at' => 'datetime',

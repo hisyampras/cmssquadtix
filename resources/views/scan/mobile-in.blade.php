@@ -7,7 +7,10 @@
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 dark:border-slate-800 dark:bg-slate-900">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100">Scan Mobile (PDT)</h1>
+          <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100">
+            Scan Mobile (PDT)
+            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-black tracking-widest uppercase bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900/60 dark:text-emerald-200">IN</span>
+          </h1>
           <p class="text-xs text-slate-500 mt-1 dark:text-slate-400">Optimized for handheld scanner workflow.</p>
         </div>
         <a href="{{ route('scan.index', ['event_id' => $eventId, 'gate' => $gate]) }}"
@@ -155,6 +158,8 @@
     if (r === 'VALID') {
       beep(980, 0.08, 'triangle', 0.07);
       setTimeout(() => beep(1320, 0.08, 'triangle', 0.07), 90);
+    } else if (r === 'WARNING') {
+      beep(520, 0.12, 'sine', 0.06);
     } else if (r === 'DUPLICATE') {
       beep(640, 0.12, 'sine', 0.06);
     } else {
@@ -166,6 +171,7 @@
     if (!navigator.vibrate) return;
     const r = String(result || '').toUpperCase();
     if (r === 'VALID') navigator.vibrate([35, 35, 35]);
+    else if (r === 'WARNING') navigator.vibrate([60, 40, 60]);
     else if (r === 'DUPLICATE') navigator.vibrate([70]);
     else navigator.vibrate([120, 60, 120]);
   }
@@ -195,6 +201,9 @@
     if (r === 'VALID') {
       card.classList.add('border-emerald-200', 'bg-emerald-50');
       pill.classList.add('bg-emerald-100', 'border-emerald-200', 'text-emerald-700');
+    } else if (r === 'WARNING') {
+      card.classList.add('border-amber-200', 'bg-amber-50');
+      pill.classList.add('bg-amber-100', 'border-amber-200', 'text-amber-700');
     } else if (r === 'DUPLICATE') {
       card.classList.add('border-amber-200', 'bg-amber-50');
       pill.classList.add('bg-amber-100', 'border-amber-200', 'text-amber-700');
@@ -305,6 +314,7 @@
       event_id: eventId,
       code,
       gate_name: el('gate_name')?.value || null,
+      mode: 'in',
       allowed_types: hasTypeFilterOptions ? getSelectedTypes() : null,
     };
 
