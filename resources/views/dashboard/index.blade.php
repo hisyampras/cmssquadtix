@@ -111,85 +111,109 @@
                   dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-xs font-bold text-emerald-600 uppercase tracking-wider dark:text-emerald-300">Checked-in Today</div>
+            <div class="text-xs font-bold text-emerald-600 uppercase tracking-wider dark:text-emerald-300">Checkin</div>
             <div id="k_validToday" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
           </div>
           <div class="h-11 w-11 rounded-2xl bg-emerald-50 text-emerald-700 grid place-items-center
                       dark:bg-emerald-950/30 dark:text-emerald-200 dark:border dark:border-emerald-900/60">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 17l5-5-5-5" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H3" />
             </svg>
           </div>
         </div>
-        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Unique tiket valid hari ini.</p>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Total scan tiket checkin.</p>
       </div>
 
       <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
                   dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-xs font-bold text-indigo-600 uppercase tracking-wider dark:text-indigo-300">Checked-in Month</div>
+            <div class="text-xs font-bold text-indigo-600 uppercase tracking-wider dark:text-indigo-300">Recheckin</div>
             <div id="k_validMonth" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
           </div>
           <div class="h-11 w-11 rounded-2xl bg-indigo-50 text-indigo-700 grid place-items-center
                       dark:bg-indigo-950/30 dark:text-indigo-200 dark:border dark:border-indigo-900/60">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M4 11h16M6 21h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 20v-6h-6" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a8 8 0 0114-6M19 5a8 8 0 00-14 6" />
             </svg>
           </div>
         </div>
-        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Unique tiket valid bulan berjalan.</p>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Total scan tiket recheckin.</p>
       </div>
 
       <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
                   dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider dark:text-slate-400">Checked-in All</div>
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider dark:text-slate-400">Pending</div>
             <div id="k_validAll" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
           </div>
           <div class="h-11 w-11 rounded-2xl bg-slate-100 text-slate-700 grid place-items-center
                       dark:bg-slate-950/40 dark:text-slate-100 dark:border dark:border-slate-800">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 2" />
+              <circle cx="12" cy="12" r="8" stroke-width="2" />
             </svg>
           </div>
         </div>
-        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Unique tiket valid sepanjang event.</p>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Total tiket berstatus pending.</p>
       </div>
 
       <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
                   dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-xs font-bold text-amber-600 uppercase tracking-wider dark:text-amber-300">Duplicate</div>
+            <div class="text-xs font-bold text-amber-600 uppercase tracking-wider dark:text-amber-300">Checkout</div>
             <div id="k_dupAll" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
           </div>
           <div class="h-11 w-11 rounded-2xl bg-amber-50 text-amber-700 grid place-items-center
                       dark:bg-amber-950/30 dark:text-amber-200 dark:border dark:border-amber-900/60">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8M8 8h8M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3H5a2 2 0 00-2 2v14a2 2 0 002 2h4" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 7l-5 5 5 5" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h12" />
             </svg>
           </div>
         </div>
-        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Scan ulang yang sudah pernah valid.</p>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Total scan tiket checkout.</p>
       </div>
 
       <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
                   dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-xs font-bold text-rose-600 uppercase tracking-wider dark:text-rose-300">Invalid</div>
+            <div class="text-xs font-bold text-rose-600 uppercase tracking-wider dark:text-rose-300">Recheckout</div>
             <div id="k_invalidAll" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">0</div>
           </div>
           <div class="h-11 w-11 rounded-2xl bg-rose-50 text-rose-700 grid place-items-center
                       dark:bg-rose-950/30 dark:text-rose-200 dark:border dark:border-rose-900/60">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3H5a2 2 0 00-2 2v14a2 2 0 002 2h4" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 7l-5 5 5 5" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h12" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 5v4M14 7h4" />
             </svg>
           </div>
         </div>
-        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">QR/tiket tidak terdaftar atau gagal validasi.</p>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Total scan tiket recheckout.</p>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm p-5
+                dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Status Trend (5 Menit)</div>
+          <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">Pending, Checkin, Recheckin, Checkout, Recheckout.</div>
+        </div>
+        <div id="trendLegend" class="flex flex-wrap items-center justify-end gap-2 text-[11px]"></div>
+      </div>
+      <div class="mt-4">
+        <svg id="trendSvg" viewBox="0 0 980 280" class="w-full h-[280px]"></svg>
       </div>
     </div>
 
@@ -258,6 +282,83 @@
   let recentRows = [];
   let recentPage = 1;
 
+  function renderTrend(chart) {
+    const svg = el('trendSvg');
+    if (!svg) return;
+
+    const labels = Array.isArray(chart?.labels) ? chart.labels : [];
+    const series = chart?.series || {};
+    const defs = [
+      { key: 'pending', label: 'Pending', color: '#475569' },
+      { key: 'checkin', label: 'Checkin', color: '#059669' },
+      { key: 'recheckin', label: 'Recheckin', color: '#4f46e5' },
+      { key: 'checkout', label: 'Checkout', color: '#d97706' },
+      { key: 'recheckout', label: 'Recheckout', color: '#e11d48' },
+    ];
+
+    if (labels.length === 0) {
+      svg.innerHTML = '';
+      return;
+    }
+
+    const padLeft = 46;
+    const padRight = 16;
+    const padTop = 16;
+    const padBottom = 34;
+    const w = 980;
+    const h = 280;
+    const plotW = w - padLeft - padRight;
+    const plotH = h - padTop - padBottom;
+    const maxY = Math.max(
+      1,
+      ...defs.flatMap(d => (Array.isArray(series[d.key]) ? series[d.key] : []).map(v => Number(v || 0)))
+    );
+    const xStep = labels.length > 1 ? (plotW / (labels.length - 1)) : 0;
+    const y = (v) => padTop + (plotH - ((Number(v || 0) / maxY) * plotH));
+    const x = (i) => padLeft + (xStep * i);
+
+    const gridLines = [0, 0.25, 0.5, 0.75, 1].map(r => {
+      const yy = padTop + (plotH * r);
+      const val = Math.round(maxY * (1 - r));
+      return `
+        <line x1="${padLeft}" y1="${yy}" x2="${w - padRight}" y2="${yy}" stroke="currentColor" opacity="0.12" />
+        <text x="${padLeft - 8}" y="${yy + 4}" text-anchor="end" font-size="10" fill="currentColor" opacity="0.65">${val}</text>
+      `;
+    }).join('');
+
+    const xLabels = labels.map((lb, i) => {
+      const show = i === 0 || i === labels.length - 1 || i % 4 === 0;
+      if (!show) return '';
+      return `<text x="${x(i)}" y="${h - 10}" text-anchor="middle" font-size="10" fill="currentColor" opacity="0.65">${lb}</text>`;
+    }).join('');
+
+    const lines = defs.map(def => {
+      const arr = Array.isArray(series[def.key]) ? series[def.key] : [];
+      const pts = arr.map((v, i) => `${x(i)},${y(v)}`).join(' ');
+      if (!pts) return '';
+      return `<polyline fill="none" stroke="${def.color}" stroke-width="2.5" points="${pts}" />`;
+    }).join('');
+
+    svg.innerHTML = `
+      <g class="text-slate-600 dark:text-slate-300">
+        ${gridLines}
+        ${xLabels}
+      </g>
+      <g>${lines}</g>
+    `;
+
+    const legend = el('trendLegend');
+    if (legend) {
+      legend.innerHTML = defs.map(def => `
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 bg-white/80 text-slate-700
+                     dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
+          <span class="inline-block h-2.5 w-2.5 rounded-full" style="background:${def.color}"></span>
+          ${def.label}
+        </span>
+      `).join('');
+    }
+  }
+
   function renderRecentPage() {
     const totalPages = Math.max(1, Math.ceil(recentRows.length / RECENT_PAGE_SIZE));
     recentPage = Math.min(Math.max(recentPage, 1), totalPages);
@@ -268,17 +369,20 @@
     const recHtml = pageRows.map(r => {
       const t = (r.scanned_at ?? '').replace('T',' ').substring(0,19);
       const gate = r.gate_name ? `• ${r.gate_name}` : '';
-      const result = String(r.scan_result ?? '').toUpperCase();
+      const statusId = Number(r.status_tickets_id ?? 0);
+      const statusName = String(r.status_name ?? '').trim();
+      const statusLabel = statusName !== '' ? statusName : String(r.scan_result ?? '-');
 
       let badgeClass = 'bg-slate-100 text-slate-700 dark:bg-slate-950/40 dark:text-slate-200 dark:border dark:border-slate-800';
-      if (result.includes('VALID')) badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 dark:border dark:border-emerald-900/60';
-      if (result.includes('DUP')) badgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200 dark:border dark:border-amber-900/60';
-      if (result.includes('INVALID') || result.includes('FAIL')) badgeClass = 'bg-rose-100 text-rose-800 dark:bg-rose-950/30 dark:text-rose-200 dark:border dark:border-rose-900/60';
+      if (statusId === 2) badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 dark:border dark:border-emerald-900/60';
+      if (statusId === 4) badgeClass = 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-200 dark:border dark:border-indigo-900/60';
+      if (statusId === 3) badgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200 dark:border dark:border-amber-900/60';
+      if (statusId === 5) badgeClass = 'bg-rose-100 text-rose-800 dark:bg-rose-950/30 dark:text-rose-200 dark:border dark:border-rose-900/60';
 
       return `
         <div class="py-2 border-b border-slate-200/60 last:border-b-0 dark:border-slate-800/70">
           <div class="flex items-center gap-2">
-            <span class="text-[11px] font-extrabold px-2 py-1 rounded-lg ${badgeClass}">${result || '-'}</span>
+            <span class="text-[11px] font-extrabold px-2 py-1 rounded-lg ${badgeClass}">${statusLabel || '-'}</span>
             <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">${t || '-'}</span>
             <span class="text-xs text-slate-500 dark:text-slate-400">${gate}</span>
           </div>
@@ -362,6 +466,7 @@
       const maxPages = Math.max(1, Math.ceil(recentRows.length / RECENT_PAGE_SIZE));
       if (recentPage > maxPages) recentPage = 1;
       renderRecentPage();
+      renderTrend(data.chart || {});
 
       if (el('last')) el('last').textContent = new Date().toLocaleString('id-ID');
     } catch (e) {

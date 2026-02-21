@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\Response;
 
 class ScanGateController extends Controller
 {
+    private const STATUS_ID_CHECKED_IN = 2;
+    private const STATUS_ID_CHECKED_OUT = 3;
+    private const STATUS_ID_RECHECKED_IN = 4;
+    private const STATUS_ID_RECHECKED_OUT = 5;
+
     public function index(Request $request)
     {
         [$events, $eventId, $gate, $eventTicketTypesByEventId] = $this->scanPageData($request);
@@ -89,21 +94,12 @@ class ScanGateController extends Controller
             ->all();
 
         $now = Carbon::now('Asia/Jakarta');
-
         $ticket = Ticket::query()
             ->where('event_id', $eventId)
             ->where('code', $code)
             ->first();
 
         if (!$ticket) {
-            ScanLog::create([
-                'event_id' => $eventId,
-                'ticket_id' => null,
-                'gate_name' => $gate,
-                'scan_result' => 'INVALID',
-                'scanned_at' => $now,
-            ]);
-
             return Response::json([
                 'ok' => false,
                 'result' => 'INVALID',
@@ -120,14 +116,6 @@ class ScanGateController extends Controller
                 ->first();
 
             if (!$lockedTicket) {
-                ScanLog::create([
-                    'event_id' => $eventId,
-                    'ticket_id' => null,
-                    'gate_name' => $gate,
-                    'scan_result' => 'INVALID',
-                    'scanned_at' => $now,
-                ]);
-
                 return Response::json([
                     'ok' => false,
                     'result' => 'INVALID',
@@ -137,14 +125,6 @@ class ScanGateController extends Controller
 
             $ticketType = strtoupper((string) ($lockedTicket->ticket_type ?? 'REGULAR'));
             if ($hasTypeFilterInput && (empty($allowedTypes) || !in_array($ticketType, $allowedTypes, true))) {
-                ScanLog::create([
-                    'event_id' => $eventId,
-                    'ticket_id' => $lockedTicket->id,
-                    'gate_name' => $gate,
-                    'scan_result' => 'INVALID_TYPE',
-                    'scanned_at' => $now,
-                ]);
-
                 return Response::json([
                     'ok' => false,
                     'result' => 'INVALID_TYPE',
@@ -166,20 +146,11 @@ class ScanGateController extends Controller
                 ->value('status_tickets_id');
 
             $lastStatusId = $lastStatusId ? (int) $lastStatusId : null;
-            $isCheckedIn = in_array($lastStatusId, [2, 4], true);
-            $wasCheckedOut = in_array($lastStatusId, [3, 5], true);
+            $isCheckedIn = in_array($lastStatusId, [self::STATUS_ID_CHECKED_IN, self::STATUS_ID_RECHECKED_IN], true);
+            $wasCheckedOut = in_array($lastStatusId, [self::STATUS_ID_CHECKED_OUT, self::STATUS_ID_RECHECKED_OUT], true);
 
             if ($mode === 'out') {
                 if (!$isCheckedIn) {
-                    ScanLog::create([
-                        'event_id' => $eventId,
-                        'ticket_id' => $lockedTicket->id,
-                        'status_tickets_id' => $lastStatusId,
-                        'gate_name' => $gate,
-                        'scan_result' => 'DUPLICATE',
-                        'scanned_at' => $now,
-                    ]);
-
                     return Response::json([
                         'ok' => true,
                         'result' => 'WARNING',
@@ -191,7 +162,9 @@ class ScanGateController extends Controller
                     ]);
                 }
 
-                $nextStatusId = $lastStatusId === 4 ? 5 : 3;
+                $nextStatusId = $lastStatusId === self::STATUS_ID_RECHECKED_IN
+                    ? self::STATUS_ID_RECHECKED_OUT
+                    : self::STATUS_ID_CHECKED_OUT;
 
                 ScanLog::create([
                     'event_id' => $eventId,
@@ -214,15 +187,6 @@ class ScanGateController extends Controller
             }
 
             if ($isCheckedIn) {
-                ScanLog::create([
-                    'event_id' => $eventId,
-                    'ticket_id' => $lockedTicket->id,
-                    'status_tickets_id' => $lastStatusId,
-                    'gate_name' => $gate,
-                    'scan_result' => 'DUPLICATE',
-                    'scanned_at' => $now,
-                ]);
-
                 return Response::json([
                     'ok' => true,
                     'result' => 'WARNING',
@@ -234,7 +198,9 @@ class ScanGateController extends Controller
                 ]);
             }
 
-            $nextStatusId = $wasCheckedOut ? 4 : 2;
+            $nextStatusId = $wasCheckedOut
+                ? self::STATUS_ID_RECHECKED_IN
+                : self::STATUS_ID_CHECKED_IN;
 
             $policy = TicketTypePolicy::query()
                 ->where('event_id', $eventId)
@@ -247,19 +213,10 @@ class ScanGateController extends Controller
             $validScanCount = ScanLog::query()
                 ->where('event_id', $eventId)
                 ->where('ticket_id', $lockedTicket->id)
-                ->where('scan_result', 'VALID')
+                ->whereIn('status_tickets_id', [self::STATUS_ID_CHECKED_IN, self::STATUS_ID_RECHECKED_IN])
                 ->count();
 
             if ($maxEntryCount !== null && $validScanCount >= (int) $maxEntryCount) {
-                ScanLog::create([
-                    'event_id' => $eventId,
-                    'ticket_id' => $lockedTicket->id,
-                    'status_tickets_id' => $lastStatusId,
-                    'gate_name' => $gate,
-                    'scan_result' => 'DUPLICATE',
-                    'scanned_at' => $now,
-                ]);
-
                 return Response::json([
                     'ok' => true,
                     'result' => 'DUPLICATE',
