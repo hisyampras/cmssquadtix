@@ -92,6 +92,20 @@
         </div>
 
         <div>
+          <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">No Transaction</label>
+          <input name="no_transaction"
+                 value="{{ old('no_transaction') }}"
+                 class="w-full mt-2 px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
+                        focus:outline-none focus:ring-4 focus:ring-slate-200/70 transition
+                        font-semibold text-slate-900 placeholder:text-slate-400
+                        dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-slate-700/50"
+                 placeholder="Contoh: TRX-000123 (opsional)">
+          @error('no_transaction')
+            <p class="mt-2 text-xs font-semibold text-rose-700 dark:text-rose-200">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div>
           <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Name</label>
           <input name="name"
                  value="{{ old('name') }}"

@@ -63,6 +63,14 @@
       </div>
     @endif
 
+    @if(session('warning'))
+      <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900
+                  dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+        <div class="font-extrabold">Perhatian</div>
+        <div class="text-sm mt-0.5 opacity-90">{{ session('warning') }}</div>
+      </div>
+    @endif
+
     @if(session('import_errors'))
       <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900
                   dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
@@ -215,6 +223,7 @@
           <thead class="bg-slate-50/70 text-slate-700 dark:bg-slate-950/40 dark:text-slate-200">
             <tr>
               <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Code</th>
+              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">No Transaction</th>
               <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Category</th>
               <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Name</th>
               <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Other Data</th>
@@ -232,6 +241,12 @@
                     {{ $t->code }}
                   </div>
                   <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">Ticket Code</div>
+                </td>
+
+                <td class="px-4 py-4">
+                  <div class="font-semibold text-slate-900 dark:text-slate-100">
+                    {{ $t->no_transaction ?: '-' }}
+                  </div>
                 </td>
 
                 <td class="px-4 py-4">
@@ -317,7 +332,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="7" class="px-4 py-10 text-center">
+                <td colspan="8" class="px-4 py-10 text-center">
                   <div class="text-slate-500 dark:text-slate-400">Belum ada ticket.</div>
                   <div class="mt-3">
                     <a href="{{ route('events.tickets.create', $event) }}"

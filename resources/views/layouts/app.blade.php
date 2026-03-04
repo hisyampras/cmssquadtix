@@ -302,6 +302,38 @@
                 </div>
               </section>
             @endunless
+
+            {{-- REDEMPTION MENU --}}
+            <section class="rounded-xl border border-[var(--border)] overflow-hidden transition-theme" data-nav-section>
+              <button type="button"
+                class="flex items-center justify-between px-3 h-11 bg-[var(--panel)] w-full"
+                data-collapse-btn data-key="nav:redemption" aria-expanded="true">
+                <span class="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+                  x-show="!sidebarMini" x-transition>
+                  Redemption
+                </span>
+                <span class="text-xs font-semibold text-[var(--text-muted)]" x-show="sidebarMini" x-cloak>
+                  <i class="fa-solid fa-ticket"></i>
+                </span>
+                <svg class="h-4 w-4 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
+                </svg>
+              </button>
+
+              <div class="p-2 space-y-1 bg-[var(--sidebar-bg)] border-t border-[var(--border)]"
+                data-collapse-panel data-key="nav:redemption">
+                <a href="{{ route('redemption.index') }}"
+                  data-nav-search-item
+                  data-label="redemption redeem penukaran tiket"
+                  class="{{ $navItemBase }} {{ request()->routeIs('redemption.*') ? 'active bg-[var(--sidebar-hover)] text-brand-blue font-semibold' : '' }}">
+                  <span class="w-6 flex justify-center text-[var(--text-muted)]">
+                    <i class="fa-solid fa-ticket text-sm"></i>
+                  </span>
+                  <span class="text-sm" x-show="!sidebarMini" x-transition>Redemption</span>
+                </a>
+              </div>
+            </section>
+
             {{-- SCAN IN MENU --}}
             <section class="rounded-xl border border-[var(--border)] overflow-hidden transition-theme" data-nav-section>
               <button type="button"
@@ -345,6 +377,7 @@
                   </span>
                   <span class="text-sm" x-show="!sidebarMini" x-transition>Scan Mobile</span>
                 </a>
+
               </div>
             </section>
 

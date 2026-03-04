@@ -7,6 +7,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\GateController;
 use App\Http\Controllers\GroupGateController;
 use App\Http\Controllers\ScanGateController;
+use App\Http\Controllers\RedemptionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\UserAdminActionsController;
@@ -43,6 +44,9 @@ Route::middleware(['auth', 'active', 'forcepw', 'restrict.scan-gate'])->group(fu
         ->middleware('can:scan-mobile')
         ->name('scan.out.mobile');
     Route::post('/scan', [ScanGateController::class, 'scan'])->name('scan.do');
+    Route::get('/redemption', [RedemptionController::class, 'index'])->name('redemption.index');
+    Route::post('/redemption/search', [RedemptionController::class, 'search'])->name('redemption.search');
+    Route::post('/redemption/action', [RedemptionController::class, 'action'])->name('redemption.action');
 
     // Events
     Route::resource('events', EventController::class)->except(['show']);

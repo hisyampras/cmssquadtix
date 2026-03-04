@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Schema;
 
 class ScanGateController extends Controller
 {
@@ -173,12 +174,12 @@ class ScanGateController extends Controller
 
                 $this->resolveGroupGateId($eventId, $gate, $ticketType);
 
-                ScanLog::create([
+                ScanLog::create($this->buildScanLogPayload($eventId, [
                     'tickets_id' => $lockedTicket->id,
                     'status_tickets_id' => $nextStatusId,
                     'scan_result' => 'VALID',
                     'scanned_at' => $now,
-                ]);
+                ]));
 
                 return Response::json([
                     'ok' => true,
@@ -242,12 +243,12 @@ class ScanGateController extends Controller
 
             $this->resolveGroupGateId($eventId, $gate, $ticketType);
 
-            ScanLog::create([
+            ScanLog::create($this->buildScanLogPayload($eventId, [
                 'tickets_id' => $lockedTicket->id,
                 'status_tickets_id' => $nextStatusId,
                 'scan_result' => 'VALID',
                 'scanned_at' => $now,
-            ]);
+            ]));
 
             return Response::json([
                 'ok' => true,
@@ -304,6 +305,18 @@ class ScanGateController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+    }
+
+    private function buildScanLogPayload(int $eventId, array $payload): array
+    {
+        if (Schema::hasColumn('scan_logs', 'event_id')) {
+            $payload['event_id'] = $eventId;
+        }
+        if (Schema::hasColumn('scan_logs', 'events_id')) {
+            $payload['events_id'] = $eventId;
+        }
+
+        return $payload;
     }
 
 }

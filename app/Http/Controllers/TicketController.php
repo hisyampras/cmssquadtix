@@ -100,10 +100,10 @@ class TicketController extends Controller
 
     public function downloadTemplate(Event $event)
     {
-        $csv = "code,category,name,other_data\n";
-        $csv .= "TCKT-000001,REGULAR,John Doe,Table A1\n";
-        $csv .= "TCKT-000002,VIP,Jane Doe,Seat B-12\n";
-        $csv .= "TCKT-000003,VVIP,Alex Smith,Access all area\n";
+        $csv = "code,no_transaction,category,name,other_data\n";
+        $csv .= "TCKT-000001,TRX-000001,REGULAR,John Doe,Table A1\n";
+        $csv .= "TCKT-000002,TRX-000002,VIP,Jane Doe,Seat B-12\n";
+        $csv .= "TCKT-000003,TRX-000003,VVIP,Alex Smith,Access all area\n";
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv',
@@ -126,14 +126,17 @@ class TicketController extends Controller
 
         $rows = [];
         $errors = [];
+        $duplicateCount = 0;
         $lineNumber = 0;
         $headerChecked = false;
         $categoryCache = [];
+        $seenCodesGlobal = $this->existingCodesGlobal();
         $columnMap = [
             'code' => 0,
-            'category' => 1,
-            'name' => 2,
-            'other_data' => 3,
+            'no_transaction' => 1,
+            'category' => 2,
+            'name' => 3,
+            'other_data' => 4,
         ];
 
         while (($data = fgetcsv($handle)) !== false) {
@@ -148,20 +151,32 @@ class TicketController extends Controller
                 if ($firstCol === 'code') {
                     $headers = array_map(static fn ($value) => strtolower(trim((string) $value)), $data);
                     $columnMap['code'] = array_search('code', $headers, true) !== false ? array_search('code', $headers, true) : 0;
+                    $transactionIndex = array_search('no_transaction', $headers, true);
                     $categoryIndex = array_search('category', $headers, true);
                     $nameIndex = array_search('name', $headers, true);
                     $otherDataIndex = array_search('other_data', $headers, true);
 
-                    $columnMap['category'] = $categoryIndex !== false ? $categoryIndex : 1;
-                    $columnMap['name'] = $nameIndex !== false ? $nameIndex : 2;
-                    $columnMap['other_data'] = $otherDataIndex !== false ? $otherDataIndex : 3;
+                    $columnMap['no_transaction'] = $transactionIndex !== false ? $transactionIndex : 1;
+                    $columnMap['category'] = $categoryIndex !== false ? $categoryIndex : 2;
+                    $columnMap['name'] = $nameIndex !== false ? $nameIndex : 3;
+                    $columnMap['other_data'] = $otherDataIndex !== false ? $otherDataIndex : 4;
                     $headerChecked = true;
                     continue; // header row
+                }
+                if (count($data) === 4) {
+                    // Backward compatibility for old template: code,category,name,other_data
+                    $columnMap['no_transaction'] = -1;
+                    $columnMap['category'] = 1;
+                    $columnMap['name'] = 2;
+                    $columnMap['other_data'] = 3;
                 }
                 $headerChecked = true;
             }
 
-            $code = trim((string) ($data[$columnMap['code']] ?? ''));
+            $code = strtoupper(trim((string) ($data[$columnMap['code']] ?? '')));
+            $noTransaction = $columnMap['no_transaction'] >= 0
+                ? trim((string) ($data[$columnMap['no_transaction']] ?? ''))
+                : '';
             $category = trim((string) ($data[$columnMap['category']] ?? 'REGULAR'));
             $name = trim((string) ($data[$columnMap['name']] ?? ''));
             $otherData = trim((string) ($data[$columnMap['other_data']] ?? ''));
@@ -171,8 +186,19 @@ class TicketController extends Controller
                 continue;
             }
 
+            if (isset($seenCodesGlobal[$code])) {
+                $duplicateCount++;
+                $errors[] = "Baris {$lineNumber}: code {$code} sudah ada (duplicate global).";
+                continue;
+            }
+
             if (mb_strlen($code) > 64) {
                 $errors[] = "Baris {$lineNumber}: code maksimal 64 karakter.";
+                continue;
+            }
+
+            if ($noTransaction !== '' && mb_strlen($noTransaction) > 100) {
+                $errors[] = "Baris {$lineNumber}: no_transaction maksimal 100 karakter.";
                 continue;
             }
 
@@ -192,12 +218,14 @@ class TicketController extends Controller
 
             $rows[] = [
                 'code' => $code,
+                'no_transaction' => $noTransaction !== '' ? $noTransaction : null,
                 'name' => $name !== '' ? $name : null,
                 'category_id' => $this->resolveCategoryId($event->id, $category, $categoryCache),
                 'other_data' => $otherData !== '' ? $otherData : null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
+            $seenCodesGlobal[$code] = true;
         }
 
         fclose($handle);
@@ -208,39 +236,49 @@ class TicketController extends Controller
                 ->with('import_errors', array_slice($errors, 0, 10));
         }
 
-        $inserted = 0;
+        $inserted = count($rows);
         if (!empty($rows)) {
-            // insertOrIgnore handles duplicate code safely.
             foreach (array_chunk($rows, 500) as $chunk) {
-                $inserted += DB::table('tickets')->insertOrIgnore($chunk);
+                DB::table('tickets')->insert($chunk);
             }
         }
 
-        $validCount = count($rows);
-        $duplicateCount = max(0, $validCount - $inserted);
         $invalidCount = count($errors);
+
+        $message = "Import selesai. Inserted: {$inserted}, Duplicate: {$duplicateCount}, Invalid: {$invalidCount}.";
 
         return redirect()
             ->route('events.tickets.index', $event)
-            ->with('success', "Import selesai. Inserted: {$inserted}, Duplicate: {$duplicateCount}, Invalid: {$invalidCount}.")
+            ->with($duplicateCount > 0 || $invalidCount > 0 ? 'warning' : 'success', $message)
             ->with('import_errors', array_slice($errors, 0, 10));
     }
 
     public function store(Request $request, Event $event)
     {
-        $data = $request->validate([
-            'code' => [
-                'required',
-                'string',
-                'max:64',
-                Rule::unique('tickets', 'code'),
-            ],
-            'name' => ['nullable', 'string', 'max:255'],
-            'category' => ['nullable', 'string', 'max:80'],
-            'other_data' => ['nullable', 'string'],
-        ]);
+        $normalizedCode = strtoupper(trim((string) $request->input('code')));
+        $request->merge(['code' => $normalizedCode]);
 
-        $data['code'] = strtoupper(trim($data['code']));
+        $data = $request->validate(
+            [
+                'code' => [
+                    'required',
+                    'string',
+                    'max:64',
+                    Rule::unique('tickets', 'code'),
+                ],
+                'no_transaction' => ['nullable', 'string', 'max:100'],
+                'name' => ['nullable', 'string', 'max:255'],
+                'category' => ['nullable', 'string', 'max:80'],
+                'other_data' => ['nullable', 'string'],
+            ],
+            [
+                'code.unique' => 'Code sudah digunakan.',
+                'code.max' => 'Code maksimal 64 karakter.',
+            ]
+        );
+
+        $data['code'] = $normalizedCode;
+        $data['no_transaction'] = trim((string) ($data['no_transaction'] ?? '')) ?: null;
         $data['name'] = trim((string) ($data['name'] ?? '')) ?: null;
         $data['category_id'] = $this->resolveCategoryId($event->id, (string) ($data['category'] ?? 'REGULAR'));
         unset($data['category']);
@@ -261,21 +299,31 @@ class TicketController extends Controller
     public function update(Request $request, Event $event, Ticket $ticket)
     {
         abort_unless($this->ticketBelongsToEvent($ticket, $event->id), 404);
+        $normalizedCode = strtoupper(trim((string) $request->input('code')));
+        $request->merge(['code' => $normalizedCode]);
 
-        $data = $request->validate([
-            'code' => [
-                'required',
-                'string',
-                'max:64',
-                Rule::unique('tickets', 'code')
-                    ->ignore($ticket->id),
+        $data = $request->validate(
+            [
+                'code' => [
+                    'required',
+                    'string',
+                    'max:64',
+                    Rule::unique('tickets', 'code')
+                        ->ignore($ticket->id),
+                ],
+                'no_transaction' => ['nullable', 'string', 'max:100'],
+                'name' => ['nullable', 'string', 'max:255'],
+                'category' => ['nullable', 'string', 'max:80'],
+                'other_data' => ['nullable', 'string'],
             ],
-            'name' => ['nullable', 'string', 'max:255'],
-            'category' => ['nullable', 'string', 'max:80'],
-            'other_data' => ['nullable', 'string'],
-        ]);
+            [
+                'code.unique' => 'Code sudah digunakan.',
+                'code.max' => 'Code maksimal 64 karakter.',
+            ]
+        );
 
-        $data['code'] = strtoupper(trim($data['code']));
+        $data['code'] = $normalizedCode;
+        $data['no_transaction'] = trim((string) ($data['no_transaction'] ?? '')) ?: null;
         $data['name'] = trim((string) ($data['name'] ?? '')) ?: null;
         $data['category_id'] = $this->resolveCategoryId($event->id, (string) ($data['category'] ?? 'REGULAR'));
         unset($data['category']);
@@ -317,18 +365,49 @@ class TicketController extends Controller
             ]);
         }
 
-        TicketTypePolicy::query()->updateOrCreate(
-            [
+        $hasEventId = Schema::hasColumn('category_policies', 'event_id');
+        $hasTicketType = Schema::hasColumn('category_policies', 'ticket_type');
+        $hasEventsId = Schema::hasColumn('category_policies', 'events_id');
+        $hasCategory = Schema::hasColumn('category_policies', 'category');
+        $hasCategoryId = Schema::hasColumn('category_policies', 'category_id');
+        $hasCreatedAt = Schema::hasColumn('category_policies', 'created_at');
+        $hasUpdatedAt = Schema::hasColumn('category_policies', 'updated_at');
+
+        // Match by available unique key first to avoid duplicate-key inserts on legacy schemas.
+        $match = [];
+        if ($hasEventId && $hasTicketType) {
+            $match = [
+                'event_id' => $event->id,
+                'ticket_type' => $ticketType,
+            ];
+        } elseif ($hasEventsId && $hasCategory) {
+            $match = [
+                'events_id' => $event->id,
+                'category' => $ticketType,
+            ];
+        } elseif ($hasCategoryId) {
+            $match = [
                 'category_id' => $ticketTypeId,
-            ],
-            array_filter([
-                'event_id' => Schema::hasColumn('category_policies', 'event_id') ? $event->id : null,
-                'events_id' => Schema::hasColumn('category_policies', 'events_id') ? $event->id : null,
-                'ticket_type' => Schema::hasColumn('category_policies', 'ticket_type') ? $ticketType : null,
-                'category' => Schema::hasColumn('category_policies', 'category') ? $ticketType : null,
-                'max_entry_count' => $maxEntryCount,
-            ], static fn ($value) => $value !== null)
-        );
+            ];
+        }
+
+        $updates = array_filter([
+            'event_id' => $hasEventId ? $event->id : null,
+            'events_id' => $hasEventsId ? $event->id : null,
+            'ticket_type' => $hasTicketType ? $ticketType : null,
+            'category' => $hasCategory ? $ticketType : null,
+            'category_id' => $hasCategoryId ? $ticketTypeId : null,
+            'max_entry_count' => $maxEntryCount,
+        ], static fn ($value) => $value !== null);
+
+        if ($hasCreatedAt) {
+            $updates['created_at'] = now();
+        }
+        if ($hasUpdatedAt) {
+            $updates['updated_at'] = now();
+        }
+
+        DB::table('category_policies')->updateOrInsert($match, $updates);
 
         $message = $maxEntryCount === null
             ? "Rule {$ticketType} diset ke unlimited entry."
@@ -371,5 +450,15 @@ class TicketController extends Controller
             ->where('tickets.id', $ticket->id)
             ->where('ct.events_id', $eventId)
             ->exists();
+    }
+
+    private function existingCodesGlobal(): array
+    {
+        return Ticket::query()
+            ->pluck('code')
+            ->map(fn ($code) => strtoupper(trim((string) $code)))
+            ->filter()
+            ->mapWithKeys(fn ($code) => [$code => true])
+            ->all();
     }
 }

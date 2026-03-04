@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Ticket extends Model
 {
-    protected $fillable = ['code','name','category_id','other_data'];
+    protected $fillable = ['code','no_transaction','name','category_id','other_data'];
 
     public function event(): BelongsTo
     {
