@@ -40,7 +40,7 @@
             Fullscreen
           </button>
 
-          <a href="{{ route('dashboard.index', ['event_id'=>$eventId]) }}"
+          <a href="{{ route('dashboard.index', ['events_id'=>$eventId]) }}"
              class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
                     text-slate-800 font-bold shadow-sm transition focus:outline-none focus:ring-4 focus:ring-slate-200/70
                     dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:shadow-none dark:focus:ring-slate-700/50">
@@ -68,7 +68,7 @@
             <div>
               <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Event</label>
               <div class="mt-2 relative">
-                <select id="event_id"
+                <select id="events_id"
                         class="w-full appearance-none px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
                                focus:outline-none focus:ring-4 focus:ring-slate-200/70 font-semibold text-slate-900 transition
                                dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:focus:ring-slate-700/50">
@@ -101,7 +101,7 @@
             <div class="flex items-center justify-between gap-2">
               <div>
                 <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                  Allowed Ticket Types
+                  Allowed Categories
                 </label>
                 <div id="typeSummary" class="text-xs text-slate-500 mt-1 dark:text-slate-400">
                   Semua tipe diterima.
@@ -123,7 +123,7 @@
 
             <div id="typeFilters" class="mt-3 flex flex-wrap gap-2"></div>
             <div id="typeEmpty" class="hidden mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Belum ada ticket type untuk event ini. Semua scan akan dianggap valid tipe.
+              Belum ada category untuk event ini. Semua scan akan dianggap valid tipe.
             </div>
           </div>
 
@@ -452,10 +452,10 @@
   });
 
   // -----------------------------
-  // Ticket Type Filters
+  // Category Filters
   // -----------------------------
   function storageKeyForTypes() {
-    const eventId = String(el('event_id')?.value || '');
+    const eventId = String(el('events_id')?.value || '');
     return `scan:allowed_types:${eventId}`;
   }
 
@@ -499,7 +499,7 @@
     const empty = el('typeEmpty');
     if (!wrap) return;
 
-    const eventId = String(el('event_id')?.value || '');
+    const eventId = String(el('events_id')?.value || '');
     const types = (EVENT_TICKET_TYPES[eventId] || []).map((v) => String(v).trim()).filter(Boolean);
     const persisted = readPersistedTypes();
 
@@ -611,7 +611,7 @@
     el('message').textContent = message || '';
     const selectedTypes = getSelectedTypes();
     const allowedLabel = selectedTypes.length ? selectedTypes.join(', ') : '—';
-    const selectedEventLabel = el('event_id')?.selectedOptions?.[0]?.textContent?.trim() || '-';
+    const selectedEventLabel = el('events_id')?.selectedOptions?.[0]?.textContent?.trim() || '-';
     el('meta').textContent = `Event: ${selectedEventLabel} • Gate: ${el('gate_name')?.value || '-'} • Allowed: ${allowedLabel}`;
   }
 
@@ -624,7 +624,7 @@
 
     const hasTypeFilterOptions = document.querySelectorAll('.ticket-type-checkbox').length > 0;
     const payload = {
-      event_id: Number(el('event_id').value),
+      events_id: Number(el('events_id').value),
       code: code,
       gate_name: el('gate_name').value || null,
       mode: 'in',
@@ -720,7 +720,7 @@
   }, true);
 
   el('btnFocus')?.addEventListener('click', () => el('code')?.focus());
-  el('event_id')?.addEventListener('change', () => {
+  el('events_id')?.addEventListener('change', () => {
     renderTypeFilters();
     setBox(el('result')?.textContent, el('message')?.textContent);
   });

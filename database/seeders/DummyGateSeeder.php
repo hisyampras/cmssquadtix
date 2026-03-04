@@ -24,11 +24,22 @@ class DummyGateSeeder extends Seeder
 
         // tickets
         $types = ['REGULAR', 'VIP', 'VVIP'];
+        $categoryIds = [];
+        foreach ($types as $type) {
+            $categoryIds[$type] = DB::table('category')->insertGetId([
+                'events_id' => $eventId,
+                'category' => $type,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
         $ticketIds = [];
         for ($i=0; $i<500; $i++) {
+            $ticketTypeName = $types[$i % count($types)];
             $ticketIds[] = DB::table('tickets')->insertGetId([
-                'event_id' => $eventId,
-                'ticket_type' => $types[$i % count($types)],
+                'code' => sprintf('DUMMY-%06d', $i + 1),
+                'category_id' => $categoryIds[$ticketTypeName],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -46,15 +57,50 @@ class DummyGateSeeder extends Seeder
             $result = 'VALID';
             if ($idx % 17 === 0) $result = 'DUPLICATE';
             if ($idx % 29 === 0) $result = 'INVALID';
+            $statusId = $result === 'VALID' ? 2 : ($result === 'DUPLICATE' ? 3 : 5);
+            $ticketTypeName = $types[$idx % count($types)];
 
             // scanned_at random hari ini
             $scannedAt = $now->copy()
                 ->setTime(rand(8, 21), rand(0, 59), rand(0, 59));
 
+            $gateId = DB::table('gates')->where('gates_name', $gate)->value('id');
+            if (!$gateId) {
+                $gateId = DB::table('gates')->insertGetId([
+                    'gates_name' => $gate,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            $ticketTypeId = DB::table('category')
+                ->where('events_id', $eventId)
+                ->where('category', $ticketTypeName)
+                ->value('id');
+            if (!$ticketTypeId) {
+                $ticketTypeId = DB::table('category')->insertGetId([
+                    'events_id' => $eventId,
+                    'category' => $ticketTypeName,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            DB::table('group_gates')->updateOrInsert(
+                [
+                    'gates_id' => $gateId,
+                    'category_id' => $ticketTypeId,
+                ],
+                [
+                    'status' => 'ACTIVE',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
             DB::table('scan_logs')->insert([
-                'event_id' => $eventId,
-                'ticket_id' => $tid,
-                'gate_name' => $gate,
+                'tickets_id' => $tid,
+                'status_tickets_id' => $statusId,
                 'scan_result' => $result,
                 'scanned_at' => $scannedAt,
                 'created_at' => now(),
@@ -64,9 +110,8 @@ class DummyGateSeeder extends Seeder
             // tambah 1 record duplicate untuk sebagian
             if ($result === 'DUPLICATE') {
                 DB::table('scan_logs')->insert([
-                    'event_id' => $eventId,
-                    'ticket_id' => $tid,
-                    'gate_name' => $gate,
+                    'tickets_id' => $tid,
+                    'status_tickets_id' => 3,
                     'scan_result' => 'DUPLICATE',
                     'scanned_at' => $scannedAt->copy()->addMinutes(rand(1, 10)),
                     'created_at' => now(),

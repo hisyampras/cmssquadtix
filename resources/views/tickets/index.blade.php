@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+  $showCreateCategory = request()->boolean('show_create_category') || $errors->has('category');
+@endphp
 <div class="min-h-[calc(100vh-64px)] bg-gradient-to-br from-slate-50 via-white to-slate-100
             dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
   <div class="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
@@ -72,13 +75,36 @@
       </div>
     @endif
 
-    {{-- Ticket Type Entry Rules --}}
+    {{-- Category Entry Rules --}}
     <div class="rounded-3xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm overflow-hidden
                 dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
-      <div class="p-4 md:p-5 border-b border-slate-200/70 dark:border-slate-800/70">
-        <div class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Gate Rule per Ticket Type</div>
-        <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">
-          Atur berapa kali tiket boleh check-in. Kosongkan untuk <span class="font-bold">unlimited</span>.
+      <div class="p-4 md:p-5 border-b border-slate-200/70 dark:border-slate-800/70 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div>
+          <div class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Gate Rule per Category</div>
+          <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">
+            Atur berapa kali tiket boleh check-in. Kosongkan untuk <span class="font-bold">unlimited</span>.
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <a href="{{ route('events.tickets.index', ['event' => $event, 'show_create_category' => 1]) }}"
+             class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800
+                    text-white font-extrabold transition
+                    dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900">
+              + New Category
+          </a>
+          <a href="{{ route('events.gates.index', $event) }}"
+             class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800
+                    text-white font-extrabold transition
+                    dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900">
+              + New Gate
+          </a>
+          <a href="{{ route('events.group-gates.index', $event) }}"
+             class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800
+                    text-white font-extrabold transition
+                    dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900">
+              + New Group Gate
+          </a>
         </div>
       </div>
 
@@ -86,7 +112,7 @@
         <table class="w-full text-sm">
           <thead class="bg-slate-50/70 text-slate-700 dark:bg-slate-950/40 dark:text-slate-200">
             <tr>
-              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Ticket Type</th>
+              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Category</th>
               <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Total Ticket</th>
               <th class="text-right px-4 py-3 font-black uppercase tracking-wider text-[11px]">Max Entry Rule</th>
             </tr>
@@ -94,7 +120,7 @@
           <tbody class="divide-y divide-slate-200/70 dark:divide-slate-800/70">
             @forelse(($ticketTypeStats ?? collect()) as $typeStat)
               @php
-                $typeKey = strtoupper((string) $typeStat->ticket_type);
+                $typeKey = strtoupper((string) $typeStat->category);
                 $policy = ($ticketTypePolicies ?? collect())->get($typeKey);
               @endphp
               <tr class="hover:bg-slate-50/60 transition dark:hover:bg-slate-950/30">
@@ -106,9 +132,9 @@
                   <form method="POST" action="{{ route('events.tickets.type-policy.upsert', $event) }}"
                         class="inline-flex items-center gap-2">
                     @csrf
-                    <input type="hidden" name="ticket_type" value="{{ $typeKey }}">
+                    <input type="hidden" name="category" value="{{ $typeKey }}">
                     <input type="number" name="max_entry_count" min="1" max="1000"
-                           value="{{ old('ticket_type') === $typeKey ? old('max_entry_count') : optional($policy)->max_entry_count }}"
+                           value="{{ old('category') === $typeKey ? old('max_entry_count') : optional($policy)->max_entry_count }}"
                            class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm
                                   focus:outline-none focus:ring-4 focus:ring-slate-200/70
                                   dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-100 dark:focus:ring-slate-700/50"
@@ -124,7 +150,7 @@
             @empty
               <tr>
                 <td colspan="3" class="px-4 py-6 text-center text-slate-500 dark:text-slate-400">
-                  Belum ada ticket type. Tambahkan ticket dulu untuk mengatur gate rule.
+                  Belum ada category. Tambahkan ticket dulu untuk mengatur gate rule.
                 </td>
               </tr>
             @endforelse
@@ -189,7 +215,9 @@
           <thead class="bg-slate-50/70 text-slate-700 dark:bg-slate-950/40 dark:text-slate-200">
             <tr>
               <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Code</th>
-              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Ticket Type</th>
+              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Category</th>
+              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Name</th>
+              <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Other Data</th>
               <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Check-in Status</th>
               <th class="text-left px-4 py-3 font-black uppercase tracking-wider text-[11px]">Created</th>
               <th class="text-right px-4 py-3 font-black uppercase tracking-wider text-[11px]">Aksi</th>
@@ -209,8 +237,20 @@
                 <td class="px-4 py-4">
                   <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-extrabold
                                bg-sky-50 border-sky-200 text-sky-700 dark:bg-sky-950/30 dark:border-sky-900/60 dark:text-sky-200">
-                    {{ strtoupper($t->ticket_type ?? 'REGULAR') }}
+                    {{ strtoupper($t->category ?? 'REGULAR') }}
                   </span>
+                </td>
+
+                <td class="px-4 py-4">
+                  <div class="font-semibold text-slate-900 dark:text-slate-100">
+                    {{ $t->name ?: '-' }}
+                  </div>
+                </td>
+
+                <td class="px-4 py-4">
+                  <div class="max-w-xs truncate font-medium text-slate-700 dark:text-slate-200" title="{{ $t->other_data }}">
+                    {{ $t->other_data ?: '-' }}
+                  </div>
                 </td>
 
                 <td class="px-4 py-4">
@@ -277,7 +317,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="5" class="px-4 py-10 text-center">
+                <td colspan="7" class="px-4 py-10 text-center">
                   <div class="text-slate-500 dark:text-slate-400">Belum ada ticket.</div>
                   <div class="mt-3">
                     <a href="{{ route('events.tickets.create', $event) }}"
@@ -302,4 +342,63 @@
 
   </div>
 </div>
+
+@if($showCreateCategory)
+  <div class="fixed inset-0 z-50">
+    <a href="{{ route('events.tickets.index', $event) }}"
+       class="absolute inset-0 bg-slate-900/15 backdrop-blur-[1px] dark:bg-black/25"
+       aria-label="Close modal"></a>
+
+    <div class="relative min-h-screen grid place-items-center p-4 md:p-8">
+      <div class="w-full max-w-xl rounded-3xl border border-slate-200/70 bg-white/95 p-5 md:p-6 shadow-2xl
+                  dark:border-slate-800/70 dark:bg-slate-900/90 dark:shadow-none">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">Add New Category</h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Event: <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $event->event_code ?? '-' }} - {{ $event->name }}</span>
+            </p>
+          </div>
+          <a href="{{ route('events.tickets.index', $event) }}"
+             class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50
+                    dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:hover:bg-slate-950/60"
+             aria-label="Close">
+            x
+          </a>
+        </div>
+
+        <form method="POST" action="{{ route('events.categories.store', $event) }}" class="mt-6 space-y-4">
+          @csrf
+
+          <div>
+            <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Name Category</label>
+            <input name="category"
+                   value="{{ old('category') }}"
+                   class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-semibold text-slate-900 placeholder:text-slate-400
+                          transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200/70
+                          dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:bg-slate-950/50 dark:focus:ring-slate-700/50"
+                   placeholder="Contoh: REGULAR / VIP / VVIP"
+                   required>
+            @error('category')
+              <p class="mt-2 text-xs font-semibold text-rose-700 dark:text-rose-200">{{ $message }}</p>
+            @enderror
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-1">
+            <a href="{{ route('events.tickets.index', $event) }}"
+               class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 font-bold text-slate-800 transition hover:bg-slate-50
+                      focus:outline-none focus:ring-4 focus:ring-slate-200/70 dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-100 dark:hover:bg-slate-950/50 dark:focus:ring-slate-700/50">
+              Close
+            </a>
+            <button type="submit"
+                    class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2.5 font-extrabold text-white transition hover:bg-slate-800
+                           dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white">
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+@endif
 @endsection

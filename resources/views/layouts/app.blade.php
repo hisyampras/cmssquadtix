@@ -498,7 +498,7 @@
         </header>
 
         <!-- CONTENT -->
-        <div class="flex-1 px-3 sm:px-4 md:px-6 lg:px-6 py-4 md:py-6 pb-16 bg-transparent text-[var(--text-main)] transition-theme">
+        <div class="flex-1 px-3 sm:px-4 md:px-6 lg:px-6 py-4 md:py-6 pb-24 md:pb-28 bg-transparent text-[var(--text-main)] transition-theme">
           <div class="max-w-6xl xl:max-w-7xl mx-auto w-full">
             {{ $slot ?? '' }}
             @yield('content')
@@ -506,7 +506,7 @@
         </div>
 
         <!-- FOOTER -->
-        <footer class="border-t border-[var(--border)] bg-[var(--panel)]/95 backdrop-blur sticky bottom-0 z-30">
+        <footer class="mt-auto border-t border-[var(--border)] bg-[var(--panel)]/95 backdrop-blur">
           <div class="max-w-6xl xl:max-w-7xl mx-auto w-full px-3 sm:px-4 md:px-6 lg:px-6 py-3
                       text-[11px] sm:text-xs text-[var(--text-muted)] flex items-center justify-center">
             <span class="text-center">
@@ -763,4 +763,3 @@
 </body>
 
 </html>
-

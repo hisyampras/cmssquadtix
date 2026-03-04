@@ -5,18 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class TicketTypePolicy extends Model
+class GroupGate extends Model
 {
-    protected $table = 'category_policies';
+    protected $fillable = ['gates_id', 'category_id', 'status'];
 
-    protected $fillable = [
-        'event_id',
-        'events_id',
-        'ticket_type',
-        'category',
-        'category_id',
-        'max_entry_count',
-    ];
+    public function gate(): BelongsTo
+    {
+        return $this->belongsTo(Gate::class, 'gates_id');
+    }
 
     public function ticketType(): BelongsTo
     {

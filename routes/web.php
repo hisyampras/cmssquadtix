@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\GateController;
+use App\Http\Controllers\GroupGateController;
 use App\Http\Controllers\ScanGateController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
@@ -59,6 +61,15 @@ Route::middleware(['auth', 'active', 'forcepw', 'restrict.scan-gate'])->group(fu
             Route::post('/tickets/bulk',          [TicketController::class, 'bulkStore'])->name('tickets.bulk.store');
             Route::get('/tickets/template.csv',   [TicketController::class, 'downloadTemplate'])->name('tickets.template');
             Route::post('/tickets/type-policy',   [TicketController::class, 'upsertTypePolicy'])->name('tickets.type-policy.upsert');
+            Route::get('/categories/create',      [TicketController::class, 'createCategory'])->name('categories.create');
+            Route::post('/categories',            [TicketController::class, 'storeCategory'])->name('categories.store');
+            Route::get('/gates',                  [GateController::class, 'index'])->name('gates.index');
+            Route::post('/gates',                 [GateController::class, 'store'])->name('gates.store');
+            Route::put('/gates/{gate}',           [GateController::class, 'update'])->name('gates.update');
+            Route::delete('/gates/{gate}',        [GateController::class, 'destroy'])->name('gates.destroy');
+            Route::get('/group-gates',            [GroupGateController::class, 'index'])->name('group-gates.index');
+            Route::post('/group-gates/toggle',    [GroupGateController::class, 'toggle'])->name('group-gates.toggle');
+            Route::post('/group-gates/bulk-toggle', [GroupGateController::class, 'bulkToggle'])->name('group-gates.bulk-toggle');
 
             Route::get('/tickets/{ticket}/edit',  [TicketController::class, 'edit'])->name('tickets.edit');
             Route::put('/tickets/{ticket}',       [TicketController::class, 'update'])->name('tickets.update');

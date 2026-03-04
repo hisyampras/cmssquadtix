@@ -7,19 +7,16 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('tickets', function (Blueprint $table) {
+        Schema::create('category', function (Blueprint $table) {
             $table->id();
-            $table->string('code', 64);              // isi QR/Barcode
-            $table->unsignedBigInteger('category_id')->nullable();
+            $table->foreignId('events_id')->nullable()->constrained('events')->nullOnDelete();
+            $table->string('category');
             $table->timestamps();
-
-            $table->unique('code');
-            $table->index('category_id');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('tickets');
+        Schema::dropIfExists('category');
     }
 };

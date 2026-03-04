@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('scan_logs', function (Blueprint $table) {
-            $table->index(['event_id', 'ticket_id', 'scan_result'], 'scan_logs_event_ticket_result_idx');
-            $table->index(['event_id', 'gate_name', 'scanned_at'], 'scan_logs_event_gate_scanned_idx');
+            $table->index(['events_id', 'ticket_id', 'scan_result'], 'scan_logs_event_ticket_result_idx');
+            $table->index(['events_id', 'gate_name', 'scanned_at'], 'scan_logs_event_gate_scanned_idx');
         });
     }
 

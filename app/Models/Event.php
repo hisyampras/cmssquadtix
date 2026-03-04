@@ -48,8 +48,4 @@ class Event extends Model
         return $this->hasMany(ScanLog::class);
     }
 
-    public function ticketTypePolicies(): HasMany
-    {
-        return $this->hasMany(TicketTypePolicy::class);
-    }
 }

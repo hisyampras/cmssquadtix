@@ -31,7 +31,7 @@
                     dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:shadow-none dark:focus:ring-slate-700/50">
             Manage Events
           </a>
-          <a href="{{ route('scan.index', ['event_id'=>$eventId]) }}"
+          <a href="{{ route('scan.index', ['events_id'=>$eventId]) }}"
              class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold shadow-sm transition
                     focus:outline-none focus:ring-4 focus:ring-slate-200/70
                     dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 dark:shadow-none dark:focus:ring-slate-700/50">
@@ -412,7 +412,7 @@
       const eventId = eventSelect ? eventSelect.value : null;
 
       const url = new URL("{{ route('dashboard.data') }}");
-      if (eventId) url.searchParams.set('event_id', eventId);
+      if (eventId) url.searchParams.set('events_id', eventId);
 
       const res = await fetch(url, { headers: {'Accept':'application/json'} });
 
@@ -494,7 +494,7 @@
   if (sel) {
     sel.addEventListener('change', () => {
       const u = new URL(window.location);
-      u.searchParams.set('event_id', sel.value);
+      u.searchParams.set('events_id', sel.value);
       history.replaceState({}, '', u);
       loadData();
     });

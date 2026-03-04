@@ -46,7 +46,7 @@
                 dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-none">
       <div class="p-5 md:p-6 border-b border-slate-200/70 dark:border-slate-800/70">
         <div class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Upload CSV</div>
-        <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">Format: <code>code,ticket_type</code> (header optional). Duplicate code akan dilewati otomatis.</div>
+        <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">Format: <code>code,category,name,other_data</code> (header optional). Kolom <code>name</code> dan <code>other_data</code> opsional. Duplicate code akan dilewati otomatis.</div>
       </div>
 
       <form method="POST" action="{{ route('events.tickets.bulk.store', $event) }}" enctype="multipart/form-data" class="p-5 md:p-6 space-y-4">
@@ -67,9 +67,9 @@
 
         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-300">
           <div class="font-bold mb-2">Contoh isi template:</div>
-          <pre class="whitespace-pre-wrap">code,ticket_type
-TCKT-000001,REGULAR
-TCKT-000002,VIP</pre>
+          <pre class="whitespace-pre-wrap">code,category,name,other_data
+TCKT-000001,REGULAR,John Doe,Table A1
+TCKT-000002,VIP,Jane Doe,Seat B-12</pre>
         </div>
 
         <div class="pt-2 flex justify-end">

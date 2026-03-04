@@ -3,7 +3,7 @@
 @section('content')
 <div class="min-h-[calc(100vh-64px)] bg-gradient-to-br from-slate-50 via-white to-slate-100
             dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
-  <div class="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
+  <div class="max-w-3xl mx-auto p-4 md:p-8 pb-12 md:pb-16 space-y-6">
 
     {{-- Header --}}
     <div class="rounded-3xl border border-slate-200/70 bg-white/75 backdrop-blur supports-[backdrop-filter]:bg-white/60
@@ -72,10 +72,10 @@
         </div>
 
         <div>
-          <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Ticket Type</label>
-          <input name="ticket_type"
+          <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Category</label>
+          <input name="category"
                  list="ticketTypeOptions"
-                 value="{{ old('ticket_type', 'REGULAR') }}"
+                 value="{{ old('category', 'REGULAR') }}"
                  class="w-full mt-2 px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
                         focus:outline-none focus:ring-4 focus:ring-slate-200/70 transition
                         font-semibold text-slate-900 placeholder:text-slate-400
@@ -86,7 +86,35 @@
             <option value="VIP"></option>
             <option value="VVIP"></option>
           </datalist>
-          @error('ticket_type')
+          @error('category')
+            <p class="mt-2 text-xs font-semibold text-rose-700 dark:text-rose-200">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div>
+          <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Name</label>
+          <input name="name"
+                 value="{{ old('name') }}"
+                 class="w-full mt-2 px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
+                        focus:outline-none focus:ring-4 focus:ring-slate-200/70 transition
+                        font-semibold text-slate-900 placeholder:text-slate-400
+                        dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-slate-700/50"
+                 placeholder="Nama pemilik tiket (opsional)">
+          @error('name')
+            <p class="mt-2 text-xs font-semibold text-rose-700 dark:text-rose-200">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div>
+          <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Other Data</label>
+          <textarea name="other_data"
+                    rows="3"
+                    class="w-full mt-2 px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
+                           focus:outline-none focus:ring-4 focus:ring-slate-200/70 transition
+                           font-semibold text-slate-900 placeholder:text-slate-400
+                           dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-slate-700/50"
+                    placeholder="Data tambahan (opsional)">{{ old('other_data') }}</textarea>
+          @error('other_data')
             <p class="mt-2 text-xs font-semibold text-rose-700 dark:text-rose-200">{{ $message }}</p>
           @enderror
         </div>

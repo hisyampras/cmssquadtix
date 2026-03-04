@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('scan_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('event_id')->constrained('events')->cascadeOnDelete();
+            $table->foreignId('events_id')->constrained('events')->cascadeOnDelete();
             $table->foreignId('ticket_id')->nullable()->constrained('tickets')->nullOnDelete();
 
             $table->string('gate_name', 80)->nullable();
@@ -17,8 +17,8 @@ return new class extends Migration {
             $table->dateTime('scanned_at');
             $table->timestamps();
 
-            $table->index(['event_id', 'scanned_at']);
-            $table->index(['event_id', 'scan_result']);
+            $table->index(['events_id', 'scanned_at']);
+            $table->index(['events_id', 'scan_result']);
             $table->index(['ticket_id', 'scan_result']);
         });
     }

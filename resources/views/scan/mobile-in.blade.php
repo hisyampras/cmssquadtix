@@ -13,7 +13,7 @@
           </h1>
           <p class="text-xs text-slate-500 mt-1 dark:text-slate-400">Optimized for handheld scanner workflow.</p>
         </div>
-        <a href="{{ route('scan.index', ['event_id' => $eventId, 'gate' => $gate]) }}"
+        <a href="{{ route('scan.index', ['events_id' => $eventId, 'gate' => $gate]) }}"
            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:hover:bg-slate-950">
           <i class="fa-solid fa-desktop"></i>
           Desktop
@@ -71,7 +71,7 @@
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 space-y-3 dark:border-slate-800 dark:bg-slate-900">
       <div>
         <label class="text-[11px] font-black uppercase tracking-wide text-slate-600 dark:text-slate-300">Event</label>
-        <select id="event_id"
+        <select id="events_id"
           class="mt-1.5 w-full px-3 py-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:ring-slate-700"
           @disabled($events->isEmpty())>
           @forelse($events as $e)
@@ -91,7 +91,7 @@
 
       <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-950/40">
         <div class="flex items-center justify-between gap-2">
-          <div class="text-[11px] font-black uppercase tracking-wide text-slate-600 dark:text-slate-300">Ticket Type Filter</div>
+          <div class="text-[11px] font-black uppercase tracking-wide text-slate-600 dark:text-slate-300">Category Filter</div>
           <div class="flex items-center gap-2">
             <button id="btnTypeAll" type="button" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-[11px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">All</button>
             <button id="btnTypeNone" type="button" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-[11px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Clear</button>
@@ -223,13 +223,13 @@
     el('resultMessage').textContent = message || '-';
     el('resultTime').textContent = new Date().toLocaleTimeString('id-ID');
 
-    const type = ticket?.ticket_type ? `Type: ${ticket.ticket_type}` : 'Type: -';
+    const type = ticket?.category ? `Type: ${ticket.category}` : 'Type: -';
     const code = ticket?.code ? `Code: ${ticket.code}` : 'Code: -';
     el('resultMeta').textContent = `${code} | ${type}`;
   }
 
   function storageKeyForTypes() {
-    const eventId = String(el('event_id')?.value || '');
+    const eventId = String(el('events_id')?.value || '');
     return `scan_mobile:allowed_types:${eventId}`;
   }
 
@@ -266,13 +266,13 @@
     const wrap = el('typeFilters');
     if (!wrap) return;
 
-    const eventId = String(el('event_id')?.value || '');
+    const eventId = String(el('events_id')?.value || '');
     const types = (EVENT_TICKET_TYPES[eventId] || []).map((v) => String(v).trim()).filter(Boolean);
     const persisted = readPersistedTypes();
 
     wrap.innerHTML = '';
     if (types.length === 0) {
-      el('typeSummary').textContent = 'No ticket type data for this event.';
+      el('typeSummary').textContent = 'No category data for this event.';
       return;
     }
 
@@ -303,7 +303,7 @@
     const code = String(rawCode || '').trim();
     if (!code) return;
 
-    const eventId = Number(el('event_id')?.value || 0);
+    const eventId = Number(el('events_id')?.value || 0);
     if (!eventId) {
       setResult('INVALID', 'No active event selected.');
       return;
@@ -311,7 +311,7 @@
 
     const hasTypeFilterOptions = document.querySelectorAll('.ticket-type-checkbox').length > 0;
     const payload = {
-      event_id: eventId,
+      events_id: eventId,
       code,
       gate_name: el('gate_name')?.value || null,
       mode: 'in',
@@ -423,7 +423,7 @@
     renderRecent();
   });
 
-  el('event_id')?.addEventListener('change', () => {
+  el('events_id')?.addEventListener('change', () => {
     renderTypeFilters();
     el('scan_code')?.focus();
   });

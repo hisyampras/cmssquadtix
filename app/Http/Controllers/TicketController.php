@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Ticket;
+use App\Models\TicketType;
 use App\Models\TicketTypePolicy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class TicketController extends Controller
@@ -15,32 +17,37 @@ class TicketController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
 
-        $tickets = Ticket::where('event_id', $event->id)
-            ->when($q !== '', fn ($query) => $query->where('code', 'like', '%' . strtoupper($q) . '%'))
+        $tickets = Ticket::query()
+            ->leftJoin('category as ct', 'ct.id', '=', 'tickets.category_id')
+            ->select('tickets.*', DB::raw("COALESCE(ct.category, 'REGULAR') as category"))
+            ->where('ct.events_id', $event->id)
+            ->when($q !== '', fn ($query) => $query->where('tickets.code', 'like', '%' . strtoupper($q) . '%'))
             ->addSelect([
                 'latest_status_tickets_id' => DB::table('scan_logs')
-                    ->select('status_tickets_id')
-                    ->whereColumn('scan_logs.ticket_id', 'tickets.id')
-                    ->where('scan_logs.event_id', $event->id)
+                    ->select('scan_logs.status_tickets_id')
+                    ->whereColumn('scan_logs.tickets_id', 'tickets.id')
                     ->orderByDesc('scan_logs.scanned_at')
                     ->orderByDesc('scan_logs.id')
                     ->limit(1),
             ])
-            ->orderByDesc('id')
+            ->orderByDesc('tickets.id')
             ->paginate(15)
             ->withQueryString();
 
-        $ticketTypeStats = Ticket::query()
-            ->selectRaw("UPPER(COALESCE(ticket_type, 'REGULAR')) as ticket_type, COUNT(*) as total_ticket")
-            ->where('event_id', $event->id)
-            ->groupByRaw("UPPER(COALESCE(ticket_type, 'REGULAR'))")
-            ->orderBy('ticket_type')
+        $ticketTypeStats = DB::table('category as ct')
+            ->leftJoin('tickets', 'tickets.category_id', '=', 'ct.id')
+            ->selectRaw('UPPER(ct.category) as category, COUNT(tickets.id) as total_ticket')
+            ->where('ct.events_id', $event->id)
+            ->groupByRaw('UPPER(ct.category)')
+            ->orderBy('category')
             ->get();
 
         $ticketTypePolicies = TicketTypePolicy::query()
-            ->where('event_id', $event->id)
+            ->join('category', 'category.id', '=', 'category_policies.category_id')
+            ->where('category.events_id', $event->id)
+            ->select('category_policies.*', 'category.category as ticket_type_name')
             ->get()
-            ->mapWithKeys(fn ($row) => [strtoupper((string) $row->ticket_type) => $row]);
+            ->mapWithKeys(fn ($row) => [strtoupper((string) $row->ticket_type_name) => $row]);
 
         return view('tickets.index', compact('event', 'tickets', 'ticketTypeStats', 'ticketTypePolicies', 'q'));
     }
@@ -55,12 +62,48 @@ class TicketController extends Controller
         return view('tickets.bulk', compact('event'));
     }
 
+    public function createCategory(Request $request, Event $event)
+    {
+        return redirect()->route('events.tickets.index', [
+            'event' => $event,
+            'show_create_category' => 1,
+        ]);
+    }
+
+    public function storeCategory(Request $request, Event $event)
+    {
+        $data = $request->validate([
+            'category' => ['required', 'string', 'max:80'],
+        ]);
+
+        $category = strtoupper(trim($data['category']));
+        if ($category === '') {
+            return back()->withErrors(['category' => 'Name Category wajib diisi.'])->withInput();
+        }
+
+        $exists = TicketType::query()
+            ->where('events_id', $event->id)
+            ->whereRaw('UPPER(category) = ?', [$category])
+            ->exists();
+
+        if ($exists) {
+            return back()->withErrors(['category' => 'Category sudah ada di event ini.'])->withInput();
+        }
+
+        TicketType::query()->create([
+            'events_id' => $event->id,
+            'category' => $category,
+        ]);
+
+        return redirect()->route('events.tickets.index', $event)->with('success', "Category {$category} berhasil dibuat.");
+    }
+
     public function downloadTemplate(Event $event)
     {
-        $csv = "code,ticket_type\n";
-        $csv .= "TCKT-000001,REGULAR\n";
-        $csv .= "TCKT-000002,VIP\n";
-        $csv .= "TCKT-000003,VVIP\n";
+        $csv = "code,category,name,other_data\n";
+        $csv .= "TCKT-000001,REGULAR,John Doe,Table A1\n";
+        $csv .= "TCKT-000002,VIP,Jane Doe,Seat B-12\n";
+        $csv .= "TCKT-000003,VVIP,Alex Smith,Access all area\n";
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv',
@@ -85,6 +128,13 @@ class TicketController extends Controller
         $errors = [];
         $lineNumber = 0;
         $headerChecked = false;
+        $categoryCache = [];
+        $columnMap = [
+            'code' => 0,
+            'category' => 1,
+            'name' => 2,
+            'other_data' => 3,
+        ];
 
         while (($data = fgetcsv($handle)) !== false) {
             $lineNumber++;
@@ -96,14 +146,25 @@ class TicketController extends Controller
             if (!$headerChecked) {
                 $firstCol = strtolower(trim((string) ($data[0] ?? '')));
                 if ($firstCol === 'code') {
+                    $headers = array_map(static fn ($value) => strtolower(trim((string) $value)), $data);
+                    $columnMap['code'] = array_search('code', $headers, true) !== false ? array_search('code', $headers, true) : 0;
+                    $categoryIndex = array_search('category', $headers, true);
+                    $nameIndex = array_search('name', $headers, true);
+                    $otherDataIndex = array_search('other_data', $headers, true);
+
+                    $columnMap['category'] = $categoryIndex !== false ? $categoryIndex : 1;
+                    $columnMap['name'] = $nameIndex !== false ? $nameIndex : 2;
+                    $columnMap['other_data'] = $otherDataIndex !== false ? $otherDataIndex : 3;
                     $headerChecked = true;
                     continue; // header row
                 }
                 $headerChecked = true;
             }
 
-            $code = trim((string) ($data[0] ?? ''));
-            $ticketType = trim((string) ($data[1] ?? 'REGULAR'));
+            $code = trim((string) ($data[$columnMap['code']] ?? ''));
+            $category = trim((string) ($data[$columnMap['category']] ?? 'REGULAR'));
+            $name = trim((string) ($data[$columnMap['name']] ?? ''));
+            $otherData = trim((string) ($data[$columnMap['other_data']] ?? ''));
 
             if ($code === '') {
                 $errors[] = "Baris {$lineNumber}: kolom code wajib diisi.";
@@ -115,19 +176,25 @@ class TicketController extends Controller
                 continue;
             }
 
-            if ($ticketType === '') {
-                $ticketType = 'REGULAR';
+            if ($category === '') {
+                $category = 'REGULAR';
             }
 
-            if (mb_strlen($ticketType) > 80) {
-                $errors[] = "Baris {$lineNumber}: ticket_type maksimal 80 karakter.";
+            if (mb_strlen($category) > 80) {
+                $errors[] = "Baris {$lineNumber}: category maksimal 80 karakter.";
+                continue;
+            }
+
+            if ($name !== '' && mb_strlen($name) > 255) {
+                $errors[] = "Baris {$lineNumber}: name maksimal 255 karakter.";
                 continue;
             }
 
             $rows[] = [
-                'event_id' => $event->id,
                 'code' => $code,
-                'ticket_type' => $ticketType,
+                'name' => $name !== '' ? $name : null,
+                'category_id' => $this->resolveCategoryId($event->id, $category, $categoryCache),
+                'other_data' => $otherData !== '' ? $otherData : null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -143,7 +210,7 @@ class TicketController extends Controller
 
         $inserted = 0;
         if (!empty($rows)) {
-            // insertOrIgnore handles duplicate (event_id, code) safely.
+            // insertOrIgnore handles duplicate code safely.
             foreach (array_chunk($rows, 500) as $chunk) {
                 $inserted += DB::table('tickets')->insertOrIgnore($chunk);
             }
@@ -166,14 +233,18 @@ class TicketController extends Controller
                 'required',
                 'string',
                 'max:64',
-                Rule::unique('tickets', 'code')->where(fn ($q) => $q->where('event_id', $event->id)),
+                Rule::unique('tickets', 'code'),
             ],
-            'ticket_type' => ['nullable', 'string', 'max:80'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'category' => ['nullable', 'string', 'max:80'],
+            'other_data' => ['nullable', 'string'],
         ]);
 
         $data['code'] = strtoupper(trim($data['code']));
-        $data['event_id'] = $event->id;
-        $data['ticket_type'] = strtoupper(trim($data['ticket_type'] ?? 'REGULAR')) ?: 'REGULAR';
+        $data['name'] = trim((string) ($data['name'] ?? '')) ?: null;
+        $data['category_id'] = $this->resolveCategoryId($event->id, (string) ($data['category'] ?? 'REGULAR'));
+        unset($data['category']);
+        $data['other_data'] = trim((string) ($data['other_data'] ?? '')) ?: null;
 
         Ticket::create($data);
 
@@ -182,13 +253,14 @@ class TicketController extends Controller
 
     public function edit(Event $event, Ticket $ticket)
     {
-        abort_unless($ticket->event_id === $event->id, 404);
+        abort_unless($this->ticketBelongsToEvent($ticket, $event->id), 404);
+        $ticket->load('categoryRef');
         return view('tickets.edit', compact('event', 'ticket'));
     }
 
     public function update(Request $request, Event $event, Ticket $ticket)
     {
-        abort_unless($ticket->event_id === $event->id, 404);
+        abort_unless($this->ticketBelongsToEvent($ticket, $event->id), 404);
 
         $data = $request->validate([
             'code' => [
@@ -196,14 +268,18 @@ class TicketController extends Controller
                 'string',
                 'max:64',
                 Rule::unique('tickets', 'code')
-                    ->where(fn ($q) => $q->where('event_id', $event->id))
                     ->ignore($ticket->id),
             ],
-            'ticket_type' => ['nullable', 'string', 'max:80'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'category' => ['nullable', 'string', 'max:80'],
+            'other_data' => ['nullable', 'string'],
         ]);
 
         $data['code'] = strtoupper(trim($data['code']));
-        $data['ticket_type'] = strtoupper(trim($data['ticket_type'] ?? 'REGULAR')) ?: 'REGULAR';
+        $data['name'] = trim((string) ($data['name'] ?? '')) ?: null;
+        $data['category_id'] = $this->resolveCategoryId($event->id, (string) ($data['category'] ?? 'REGULAR'));
+        unset($data['category']);
+        $data['other_data'] = trim((string) ($data['other_data'] ?? '')) ?: null;
         $ticket->update($data);
 
         return redirect()->route('events.tickets.index', $event)->with('success', 'Ticket berhasil diupdate.');
@@ -211,7 +287,7 @@ class TicketController extends Controller
 
     public function destroy(Event $event, Ticket $ticket)
     {
-        abort_unless($ticket->event_id === $event->id, 404);
+        abort_unless($this->ticketBelongsToEvent($ticket, $event->id), 404);
         $ticket->delete();
 
         return redirect()->route('events.tickets.index', $event)->with('success', 'Ticket berhasil dihapus.');
@@ -220,21 +296,38 @@ class TicketController extends Controller
     public function upsertTypePolicy(Request $request, Event $event)
     {
         $data = $request->validate([
-            'ticket_type' => ['required', 'string', 'max:80'],
+            'category' => ['required', 'string', 'max:80'],
             'max_entry_count' => ['nullable', 'integer', 'min:1', 'max:1000'],
         ]);
 
-        $ticketType = strtoupper(trim($data['ticket_type']));
+        $ticketType = strtoupper(trim($data['category']));
         $maxEntryCount = $request->filled('max_entry_count') ? (int) $data['max_entry_count'] : null;
+
+        $ticketTypeId = TicketType::query()
+            ->where('events_id', $event->id)
+            ->whereRaw('UPPER(category) = ?', [$ticketType])
+            ->value('id');
+
+        if (!$ticketTypeId) {
+            $ticketTypeId = TicketType::query()->insertGetId([
+                'events_id' => $event->id,
+                'category' => $ticketType,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         TicketTypePolicy::query()->updateOrCreate(
             [
-                'event_id' => $event->id,
-                'ticket_type' => $ticketType,
+                'category_id' => $ticketTypeId,
             ],
-            [
+            array_filter([
+                'event_id' => Schema::hasColumn('category_policies', 'event_id') ? $event->id : null,
+                'events_id' => Schema::hasColumn('category_policies', 'events_id') ? $event->id : null,
+                'ticket_type' => Schema::hasColumn('category_policies', 'ticket_type') ? $ticketType : null,
+                'category' => Schema::hasColumn('category_policies', 'category') ? $ticketType : null,
                 'max_entry_count' => $maxEntryCount,
-            ]
+            ], static fn ($value) => $value !== null)
         );
 
         $message = $maxEntryCount === null
@@ -242,5 +335,41 @@ class TicketController extends Controller
             : "Rule {$ticketType} diset max {$maxEntryCount} kali masuk.";
 
         return redirect()->route('events.tickets.index', $event)->with('success', $message);
+    }
+
+    private function resolveCategoryId(int $eventId, string $category, array &$cache = []): int
+    {
+        $category = strtoupper(trim($category)) ?: 'REGULAR';
+        $cacheKey = $eventId . '|' . $category;
+
+        if (isset($cache[$cacheKey])) {
+            return $cache[$cacheKey];
+        }
+
+        $categoryId = TicketType::query()
+            ->where('events_id', $eventId)
+            ->whereRaw('UPPER(category) = ?', [$category])
+            ->value('id');
+
+        if (!$categoryId) {
+            $categoryId = TicketType::query()->insertGetId([
+                'events_id' => $eventId,
+                'category' => $category,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $cache[$cacheKey] = (int) $categoryId;
+        return (int) $categoryId;
+    }
+
+    private function ticketBelongsToEvent(Ticket $ticket, int $eventId): bool
+    {
+        return Ticket::query()
+            ->join('category as ct', 'ct.id', '=', 'tickets.category_id')
+            ->where('tickets.id', $ticket->id)
+            ->where('ct.events_id', $eventId)
+            ->exists();
     }
 }

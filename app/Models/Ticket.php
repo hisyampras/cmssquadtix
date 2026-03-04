@@ -8,11 +8,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Ticket extends Model
 {
-    protected $fillable = ['event_id','code','ticket_type'];
+    protected $fillable = ['code','name','category_id','other_data'];
 
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function categoryRef(): BelongsTo
+    {
+        return $this->belongsTo(TicketType::class, 'category_id');
     }
 
     public function scans(): HasMany
