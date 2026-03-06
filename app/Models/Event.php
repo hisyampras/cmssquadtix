@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Event extends Model
 {
-    protected $fillable = ['name','location','start_at','end_at','is_active','event_code'];
+    protected $fillable = ['name','location','start_at','end_at','is_active','event_code','users_id'];
 
     protected $casts = [
         'start_at' => 'datetime',
@@ -36,6 +37,11 @@ class Event extends Model
         } while (self::query()->where('event_code', $code)->exists());
 
         return $code;
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'users_id');
     }
 
     public function tickets(): HasMany

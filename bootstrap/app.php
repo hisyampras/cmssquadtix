@@ -7,6 +7,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 return Illuminate\Foundation\Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
+        api: __DIR__ . '/../routes/api.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
@@ -37,8 +38,10 @@ return Illuminate\Foundation\Application::configure(basePath: dirname(__DIR__))
 
             // ✅ Middleware kustom ASM PORTAL
             'active'  => \App\Http\Middleware\EnsureUserActive::class,
+            'active.api' => \App\Http\Middleware\EnsureUserActiveApi::class,
             'forcepw' => \App\Http\Middleware\ForcePasswordReset::class,
             'restrict.scan-gate' => \App\Http\Middleware\RestrictScanGateAccess::class,
+            'auth.mobile-token' => \App\Http\Middleware\AuthenticateMobileToken::class,
         ]);
     })
     ->withExceptions(function ($exceptions) {

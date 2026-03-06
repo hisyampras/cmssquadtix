@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class EventController extends Controller
 {
@@ -15,7 +17,9 @@ class EventController extends Controller
 
     public function create()
     {
-        return view('events.create');
+        $users = $this->userOptions();
+
+        return view('events.create', compact('users'));
     }
 
     public function store(Request $request)
@@ -26,6 +30,7 @@ class EventController extends Controller
             'start_at' => ['nullable','date'],
             'end_at'   => ['nullable','date','after_or_equal:start_at'],
             'is_active'=> ['nullable','boolean'],
+            'users_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
         $data['is_active'] = (bool)($data['is_active'] ?? true);
@@ -37,7 +42,9 @@ class EventController extends Controller
 
     public function edit(Event $event)
     {
-        return view('events.edit', compact('event'));
+        $users = $this->userOptions();
+
+        return view('events.edit', compact('event', 'users'));
     }
 
     public function update(Request $request, Event $event)
@@ -48,6 +55,7 @@ class EventController extends Controller
             'start_at' => ['nullable','date'],
             'end_at'   => ['nullable','date','after_or_equal:start_at'],
             'is_active'=> ['nullable','boolean'],
+            'users_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
         $data['is_active'] = (bool)($data['is_active'] ?? false);
@@ -61,5 +69,13 @@ class EventController extends Controller
     {
         $event->delete();
         return redirect()->route('events.index')->with('success', 'Event berhasil dihapus.');
+    }
+
+    private function userOptions(): Collection
+    {
+        return User::query()
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->get();
     }
 }

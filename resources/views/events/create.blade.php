@@ -45,6 +45,16 @@
         <div class="text-xs text-slate-500 mt-1 dark:text-slate-400">Isi informasi event dengan benar, lalu simpan.</div>
       </div>
 
+      @php
+        $userOptions = $users
+            ->map(fn ($user) => [
+                'id' => (string) $user->id,
+                'label' => trim(($user->name ?? '') . ' - ' . ($user->email ?? ''), ' -'),
+            ])
+            ->values();
+        $initialUserId = (string) old('users_id', '');
+      @endphp
+
       <form method="POST" action="{{ route('events.store') }}" class="p-5 md:p-6 space-y-5">
         @csrf
 
@@ -78,6 +88,84 @@
                         font-semibold text-slate-900 placeholder:text-slate-400
                         dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-slate-700/50"
                  placeholder="Contoh: Ballroom Hotel / Gedung / Kota">
+        </div>
+
+        {{-- User --}}
+        <div
+          x-data="eventUserPicker()"
+          class="relative"
+          @click.outside="open = false"
+        >
+          <label class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">User</label>
+          <input type="hidden" name="users_id" :value="selectedId">
+
+          <button
+            type="button"
+            @click="open = !open; $nextTick(() => { if (open) $refs.searchInput.focus(); })"
+            class="w-full mt-2 px-4 py-3 rounded-2xl border border-slate-200 bg-white text-left
+                   hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200/70 transition
+                   font-semibold text-slate-900 dark:border-slate-800 dark:bg-slate-950/30 dark:hover:bg-slate-950/50 dark:text-slate-100 dark:focus:ring-slate-700/50"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <span x-text="selectedLabel" class="truncate"></span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          </button>
+
+          <div
+            x-show="open"
+            x-transition
+            class="absolute z-30 mt-2 w-full rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900"
+            style="display: none;"
+          >
+            <div class="p-2 border-b border-slate-200 dark:border-slate-700">
+              <input
+                x-ref="searchInput"
+                type="text"
+                x-model="query"
+                placeholder="Search user..."
+                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm
+                       focus:outline-none focus:ring-2 focus:ring-slate-200/70
+                       dark:border-slate-700 dark:bg-slate-950/30 dark:text-slate-100 dark:focus:ring-slate-700/50"
+              >
+            </div>
+
+            <div class="max-h-56 overflow-auto p-1">
+              <button
+                type="button"
+                @click="selectedId = ''; open = false"
+                class="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                Tanpa user
+              </button>
+
+              <template x-for="user in filteredUsers" :key="user.id">
+                <button
+                  type="button"
+                  @click="choose(user.id)"
+                  class="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+                  :class="user.id === selectedId ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold' : 'text-slate-700 dark:text-slate-200'"
+                  x-text="user.label"
+                ></button>
+              </template>
+
+              <p
+                x-show="filteredUsers.length === 0"
+                class="px-3 py-2 text-sm text-slate-500 dark:text-slate-400"
+              >
+                User tidak ditemukan.
+              </p>
+            </div>
+          </div>
+
+          @error('users_id')
+            <p class="text-xs text-rose-700 mt-2 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2
+                      dark:text-rose-200 dark:bg-rose-950/30 dark:border-rose-900/60">
+              {{ $message }}
+            </p>
+          @enderror
         </div>
 
         {{-- Active --}}
@@ -119,3 +207,29 @@
   </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+  function eventUserPicker() {
+    return {
+      open: false,
+      query: '',
+      selectedId: @json($initialUserId),
+      users: @json($userOptions),
+      get filteredUsers() {
+        const q = this.query.toLowerCase().trim();
+        if (!q) return this.users;
+        return this.users.filter((user) => (user.label || '').toLowerCase().includes(q));
+      },
+      get selectedLabel() {
+        const active = this.users.find((user) => String(user.id) === String(this.selectedId));
+        return active ? active.label : 'Pilih user';
+      },
+      choose(id) {
+        this.selectedId = String(id);
+        this.open = false;
+      }
+    };
+  }
+</script>
+@endpush
